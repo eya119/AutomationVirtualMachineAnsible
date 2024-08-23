@@ -391,6 +391,7 @@ def remove_vm(request,vmid):
 
 @csrf_exempt
 def start_vm(request,vmid):
+
     try:
 
         if not vmid:
@@ -398,6 +399,32 @@ def start_vm(request,vmid):
 
         # Path to your Ansible playbook
         playbook_path = '/home/hadil/workspace1/playbook_start_vm.yml'
+
+        # Run the Ansible playbook
+        result = subprocess.run(
+            ['ansible-playbook', playbook_path, '--extra-vars', f'vmid={vmid}'],
+            capture_output=True, text=True
+        )
+
+        if result.returncode == 0:
+            return JsonResponse({'status': 'success', 'output': result.stdout})
+        else:
+            return JsonResponse({'status': 'error', 'output': result.stderr}, status=500)
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)@csrf_exempt
+
+
+
+def stop_proxmox_vm_function(request,vmid):
+
+    try:
+
+        if not vmid:
+            return JsonResponse({'status': 'error', 'message': 'VM ID not provided'}, status=400)
+
+        # Path to your Ansible playbook
+        playbook_path = '/home/hadil/workspace1/playbook_stop_vm.yml'
 
         # Run the Ansible playbook
         result = subprocess.run(

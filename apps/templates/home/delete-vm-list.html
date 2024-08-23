@@ -87,6 +87,7 @@
         statusCell.innerHTML = `<div>${vm.status} </div>` || 'N/A';
 
         const actionCell = row.insertCell(3);
+       
         const deleteUrl = `/delete-vm/${vm.vmid}/`;  // Dynamically construct the delete URL
         actionCell.innerHTML = `
             <a href="${deleteUrl}" class="btn btn-danger remove-vm">Remove</a>

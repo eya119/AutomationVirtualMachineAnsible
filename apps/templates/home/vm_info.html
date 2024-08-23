@@ -28,6 +28,8 @@
 {% block content %}
     <div class="py-4">
   <nav aria-label="breadcrumb" class="d-none d-md-inline-block">
+      
+      
     <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
       <li class="breadcrumb-item">
         <a href="#">
@@ -41,26 +43,32 @@
       <li class="breadcrumb-item active" aria-current="page">Virtual machines</li>
     </ol>
   </nav>
+        
+        
   <div class="d-flex justify-content-between w-100 flex-wrap">
     <div class="mb-3 mb-lg-0">
       <h1 class="h4">summary</h1>
     </div>
-    <button id="start-vm-button">
+      
+  
+      
+      
+    <button  disabled id="button-start-vm">
                            {% comment %} <a class="nav-link" href="{% url 'remove_vm' vm.vmid %}">{% endcomment %}
 <a  id="start-vm-link" class="nav-link"><i class="far fa-question-circle me-1"></i> start vm</a>
-    </button>
+    </button> 
       
-        <button>
-      <a href="" class="btn btn-outline-gray"><i
+        <button id="button-stop-vm">
+      <a id="stop-vm-link" class="btn btn-outline-gray"><i
           class="far fa-question-circle me-1"></i> stop vm</a>
     </button>
       
-        <button>
-      <a href="" class="btn btn-outline-gray"><i
+        <button id="button-open-vm" disabled>
+      <a id="link-open-vm" target="_blank"><i
           class="far fa-question-circle me-1"></i> open vm</a>
     </button>
-        <button>
-      <a href="" class="btn btn-outline-gray"><i
+        <button id="remove-vm-button" disabled>
+      <a id="remove-vm" class="btn btn-outline-gray"><i
           class="far fa-question-circle me-1"></i> remove vm</a>
     </button>
   </div>
@@ -148,10 +156,23 @@
                 </div>
             </div>
 
+    
 {% endblock content %}
 
 {% block javascripts %}
  <script>
+ 
+    const swalWithBootstrapButtons = Swal.mixin({
+            customClass: {
+                confirmButton: 'btn btn-primary',
+                cancelButton: 'btn btn-gray'
+            },
+            buttonsStyling: false
+        });
+ let vname=""
+ let removebutt= document.getElementById('remove-vm-button')
+ let startbutt= document.getElementById('button-start-vm')
+ let stopbutt= document.getElementById('button-stop-vm')
         // WebSocket connection
         const ws = new WebSocket('ws://' + window.location.host + '/ws/vm-detail/');
         
@@ -164,7 +185,14 @@
 
         ws.onmessage = function(event) {
             const data = JSON.parse(event.data);
-
+                if(data.status==="running"){
+                    vname =data.name
+                     document.getElementById('button-open-vm').disabled=false
+                }
+                   if(data.status==="stopped"){
+                     removebutt.disabled=false
+                       startbutt.disabled=false
+                }
             // Update the card with VM details
             document.getElementById('vm-status').textContent = data.status || 'N/A';
             document.getElementById('vm-cpu').textContent = data.cpu ? `${data.cpu}` : 'N/A';
@@ -172,6 +200,9 @@
             document.getElementById('data.maxdisk').textContent = data.maxdisk ? `${data.maxdisk}` : 'N/A';
             document.getElementById('vm-name').textContent = data.name || 'N/A';
             document.getElementById('vm-id').textContent = data.vmid || 'N/A';
+            
+            
+
 
         };
 
@@ -189,28 +220,59 @@
     const vmid ="{{ vmid }}"
 
     // Set the href attribute dynamically
-    startVmLink.href = `/start_proxmox_vm/${vmid}/`; // Assuming you have a URL pattern like /start_proxmox_vm/<vmid>/
+    startVmLink.href = `/start-vm/${vmid}/`; 
+    
+    var stopVmLink = document.getElementById('stop-vm-link');
+
+    // Set the href attribute dynamically
+    stopVmLink.href = `/stop-vm/${vmid}/`;  
+    
+    
+    
+
+{% comment %}   startbutt.addEventListener('click', function(event) 
+     // Show confirmation dialog
+     {if (confirm('Are you sure you want to remove this VM?')) {
+   console.log("cococ4");
+            // Start the VM
+            startVmLinkurl = `/start-vm/${vmid}/`;
+            window.location.href = startVmLinkurl;
+
+     }}){% endcomment %}
+ 
+    
+  
+    
+ removebutt.addEventListener('click', function(event) {
+    // Show confirmation dialog
+
+    swalWithBootstrapButtons.fire({
+        icon: 'warning',
+        title: 'Success alert',
+        text: `are you sure you want to remove vm ${vmid} permanently`,
+        showCancelButton: true,
+        confirmButtonText: 'remove VM',
+        cancelButtonText: 'Cancel',
+    }).then((result) => {
+        if (result.isConfirmed) {
+             var removeVmLink = document.getElementById('remove-vm-link');
+
+         // Set the href attribute dynamically
+        // removeVmLink.href = `/delete-vm-machine/${vmid}/`;
+         removeutl=`/delete-vm-machine/${vmid}/`;
+           window.location.href = removeutl;
+        }
+    });
+});
+
+    
+
+       var openVmLink = document.getElementById('link-open-vm');
+        document.getElementById('button-open-vm').addEventListener('click', function() {
+            window.open(`https://192.168.187.137:8006/?console=kvm&novnc=1&vmid=${vmid}&vmname=${vname}&node=proxmox&resize=off&cmd=/`, '_blank');
+        })
+
 
     </script>
-    };
-
-    ws.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-
-        if (!data.error) {
-            document.getElementById('vm-id').textContent = data.vmid || 'N/A';
-            document.getElementById('vm-name').textContent = data.name || 'N/A';
-            document.getElementById('vm-status').textContent = data.status || 'N/A';
-            document.getElementById('vm-cpu').textContent = data.cpu || 'N/A';
-            document.getElementById('vm-mem').textContent = data.mem || 'N/A';
-            document.getElementById('vm-disk').textContent = data.disk || 'N/A';
-        } else {
-            console.error(data.error);
-        }
-    };
-
-    ws.onclose = function() {
-        console.log('WebSocket connection closed');
-    };
-</script>
+  
 {% endblock javascripts %}

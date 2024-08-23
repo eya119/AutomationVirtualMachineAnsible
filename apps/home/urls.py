@@ -6,14 +6,15 @@ Copyright (c) 2019 - present AppSeed.us
 from django.urls import path, re_path
 from apps.home import views
 from apps.home.views import get_proxmox_nodes_view, create_proxmox_vm, vm_names, base_view, edit_proxmox_vm, list_vms, \
-    removeVm, removeVmlist, start_proxmox_vm
+    removeVm, removeVmlist, start_proxmox_vm, stop_proxmox_vm, removeVm_in_info_vm
 
 #from apps.home.views import get_proxmox_nodes_view, create_proxmox_vm
 urlpatterns = [
     path('proxmox/nodes/', get_proxmox_nodes_view, name='proxmox_nodes'),
     path('create-vm/', create_proxmox_vm, name='create_vm'),
     path('start-vm/<int:vmid>/', start_proxmox_vm, name='start_proxmox_vm'),
-   # path('stop-vm/<int:vmid>/', stop_proxmox_vm, name='stop_proxmox_vm'),
+    path('stop-vm/<int:vmid>/', stop_proxmox_vm, name='stop_proxmox_vm'),
+    path('delete-vm-machine/<int:vmid>/', removeVm_in_info_vm, name='removeVm_in_info_vm'),
     path('delete-vm/<int:vmid>/', removeVm, name='remove_vm'),
     path('delete-list/', removeVmlist, name='remove-vm-list'),
     path('edit-vm/', edit_proxmox_vm, name='edit_vm'),

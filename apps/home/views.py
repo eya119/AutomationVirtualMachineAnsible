@@ -15,7 +15,7 @@ from django.views.decorators.http import require_POST
 
 from apps.home.models import VM
 from apps.home.services.proxmox_service import get_proxmox_nodes, create_vm, get_vm_name_list, delete_vm, \
-    run_ansible_playbook, remove_vm, start_vm
+    run_ansible_playbook, remove_vm, start_vm, stop_proxmox_vm_function
 
 
 @login_required(login_url="/login/")
@@ -86,6 +86,9 @@ def start_proxmox_vm(request,vmid):
     return  render (request,"home/vm_info.html",{'vmid': vmid})
 
 
+def stop_proxmox_vm(request,vmid):
+    stop_proxmox_vm_function(request,vmid)
+    return render(request, "home/vm_info.html", {'vmid': vmid})
 
 
 
@@ -139,7 +142,12 @@ def vmInfo(request,vmid):
     return render(request,'home/vm_info.html',{'vms_data': vms_data,'vminfo':vminfo,'vmid':vmid})
 
 def removeVm(request,vmid):
-    return remove_vm(request,vmid)
+    remove_vm(request,vmid)
+    return render(request,'home/delete-vm-list.html')
+def removeVm_in_info_vm(request,vmid):
+    remove_vm(request,vmid)
+    return  render(request,"home/vm-list.html",{'vmid':vmid})
+
 
 def removeVmlist(request):
     return render(request,'home/delete-vm-list.html')
