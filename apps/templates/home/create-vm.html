@@ -1,0 +1,185 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} create vm {% endblock %}
+{% block head %}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% endblock %}
+
+<!-- Specific Page CSS goes HERE -->
+{% block stylesheets %}
+    <link type="text/css" href="/static/assets/css/create-vm.css" rel="stylesheet">
+
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="py-4">
+  <nav aria-label="breadcrumb" class="d-none d-md-inline-block">
+    <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
+      <li class="breadcrumb-item">
+        <a href="#">
+          <svg class="icon icon-xxs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+        </a>
+      </li>
+      <li class="breadcrumb-item"><a href="#">Volt</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Forms</li>
+    </ol>
+  </nav>
+  <div class="d-flex justify-content-between w-100 flex-wrap">
+    <div class="mb-3 mb-lg-0">
+      <h1 class="h4">Create: Virtual Machine</h1>
+      <p class="mb-0">General</p>
+    </div>
+    <div>
+      <a href="https://themesberg.com/docs/volt-bootstrap-5-dashboard/components-forms/" class="btn btn-outline-gray"><i
+          class="far fa-question-circle me-1"></i> Forms Docs</a>
+    </div>
+  </div>
+</div>
+
+<div class="steps-indicator">
+  <div class="progress-line"></div>
+  <div class="progress-bar"></div>
+  <div class="step-indicator active">1</div>
+  <div class="step-indicator">2</div>
+  <div class="step-indicator">3</div>
+  <div class="step-indicator">4</div>
+</div>
+
+<form id="multiStepForm" method="POST" action="/create-vm/">
+  {% csrf_token %}
+  <div class="row step active">
+    <div class="col-12 mb-4">
+      <div class="card border-0 shadow components-section">
+        <div class="card-body">
+          <div class="row mb-4">
+            <div class="col-lg-4 col-sm-6">
+
+              <div class="mb-4">
+                <label class="my-1 me-2" for="node">Node</label>
+                <select class="form-select" id="nodeSelect" name="node" aria-label="Select Node" >
+                    <option selected disabled>Loading...</option>
+                </select>
+                                                                  <span id="error-message" class="error-message"></span>
+
+              </div>
+              <div class="mb-4">
+                <label for="vm_id">VM ID</label>
+                <input type="number" class="form-control" id="vm_id" name="vmid" aria-describedby="vm_id" required>
+                              <span id="error-message" class="error-message"></span>
+                <small id="emailHelp" class="form-text text-muted">Choose a unique id for your new vm.</small>
+              </div>
+
+              <div class="mb-4">
+                <label for="vm_name">Name</label>
+                <input type="text" class="form-control" id="vm_name" name="vm_name" aria-describedby="vm_name" required>
+                                                <span id="error-message" class="error-message"></span>
+
+              </div>
+
+              <button type="button" class="btn" onclick="nextStep()">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row step">
+    <div class="col-12 mb-4">
+      <div class="card border-0 shadow components-section">
+        <div class="card-body">
+          <div class="row mb-4">
+            <div class="col-lg-4 col-sm-6">
+              <p>Memory and CPU</p>
+              <div class="mb-4">
+                <label for="vm_memory">Memory (MB)</label>
+                <input type="number" class="form-control" id="vm_memory" name="vm_memory" aria-describedby="vm_memory" required>
+                                                <span id="error-message" class="error-message"></span>
+
+              </div>
+              <div class="mb-4">
+                <label for="vm_cores">CPU Cores</label>
+                <input type="number" class="form-control" id="vm_cores" name="vm_cores" aria-describedby="vm_cores" required>
+                                                <span id="error-message" class="error-message"></span>
+
+              </div>
+              <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+              <button type="button" class="btn" onclick="nextStep()">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row step">
+    <div class="col-12 mb-4">
+      <div class="card border-0 shadow components-section">
+        <div class="card-body">
+          <div class="row mb-4">
+            <div class="col-lg-4 col-sm-6">
+              <p>Disk and Network</p>
+              <div class="mb-4">
+                <label for="vm_disk">Disk Size (GB)</label>
+                <input type="number" class="form-control" id="vm_disk" name="vm_disk" aria-describedby="vm_disk" required> 
+                                                <span id="error-message" class="error-message"></span>
+
+              </div>
+              <div class="mb-4">
+                <label for="vm_bridge">Network Bridge</label>
+                <input type="text" class="form-control" id="vm_bridge" name="vm_bridge" aria-describedby="vm_bridge" required> 
+                                                <span id="error-message" class="error-message"></span>
+
+              </div>
+              <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+              <button type="button" class="btn" onclick="nextStep()">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row step">
+    <div class="col-12 mb-4">
+      <div class="card border-0 shadow components-section">
+        <div class="card-body">
+          <div class="row mb-4">
+            <div class="col-lg-4 col-sm-6">
+              <p>Operating System and ISO</p>
+              <div class="mb-4">
+                <label for="iso_image">ISO Image</label>
+                <input type="text" class="form-control" id="iso_image" name="iso_image" aria-describedby="iso_image" required> 
+                                                <span id="error-message" class="error-message"></span>
+
+              </div>
+              <div class="mb-4">
+                <label for="ostype">OS Type</label>
+                <input type="text" class="form-control" id="ostype" name="ostype" aria-describedby="ostype" required>
+                                                <span id="error-message" class="error-message"></span>
+
+              </div>
+              <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+              <button type="submit" class="btn"  id="submitBtn" disabled>Submit</button>
+                              <div id="spinner" class="spinner" style="visibility: hidden;"></div>
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE -->
+{% block javascripts %}
+    
+     <script src="/static/assets/js/create-vm.js"></script> 
+
+{% endblock javascripts %}

@@ -1,0 +1,118 @@
+.step {
+    display: none;
+  }
+
+  .step.active {
+    display: block;
+  }
+
+  .steps-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    position: relative;
+    padding: 0 10px;
+  }
+
+  .steps-indicator .step-indicator {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: lightgrey;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    color: #fff;
+    margin: 0 10px;
+  }
+
+  .steps-indicator .active {
+    background-color: green;
+  }
+
+  .progress-bar {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 4px;
+    background-color: green;
+    z-index: 0;
+    transform: translateY(-50%);
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  .progress-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background-color: lightgrey;
+    transform: translateY(-50%);
+    z-index: 0;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn:hover {
+    background-color: #0056b3;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+  }
+
+  .btn-secondary:hover {
+    background-color: #5a6268;
+  }
+input[type="email"].invalid {
+    border-color: red;
+    background-color: #ffe6e6;
+}
+.error-message {
+    color: red;
+    font-size: 0.9em;
+    visibility: hidden;
+}
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #007bff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+ .log-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap; /* Preserve formatting */
+        }

@@ -1,0 +1,97 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+  <div class="py-4">
+      <nav aria-label="breadcrumb" class="d-none d-md-inline-block">
+          <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
+              <li class="breadcrumb-item">
+                  <a href="#">
+                      <svg class="icon icon-xxs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                  </a>
+              </li>
+              <li class="breadcrumb-item"><a href="#">Virtual machines</a></li>
+              <li class="breadcrumb-item active" aria-current="page"></li>
+          </ol>
+      </nav>
+      <div class="d-flex justify-content-between w-100 flex-wrap">
+          <div class="mb-3 mb-lg-0">
+              <h1 class="h4"></h1>
+              <p class="mb-0"></p>
+          </div>
+          <div>
+                  <svg class="icon icon-xs me-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path></svg>
+              </a>
+          </div>
+      </div>
+  </div>
+
+  <div class="card border-0 shadow mb-4">
+      <div class="card-body">
+          <div class="table-responsive">
+              <table class="table table-centered table-nowrap mb-0 rounded">
+                  <thead class="thead-light">
+                      <tr>
+                          <th class="border-0 rounded-start">#</th>
+                          <th class="border-0">type</th>
+                          <th class="border-0">description</th>
+                          <th class="border-0">disk usage</th>
+                          <th class="border-0">memory usage/th>
+                          <th class="border-0">cpu usage</th>
+                          <th class="border-0 rounded-end">uptime</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <!-- Item -->
+                      <tr>
+                          <td><a href="#" class="text-primary fw-bold">1</a> </td>
+                          <td class="fw-bold d-flex align-items-center">
+                              <svg class="icon icon-xxs text-gray-500 me-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clip-rule="evenodd"></path></svg>
+                              Direct
+                          </td>
+                          <td>
+                              Direct
+                          </td>
+                          <td>
+                              - 
+                          </td>
+                          <td>
+                              --
+                          </td>
+                          <td>
+                              <div class="row d-flex align-items-center">
+                                  <div class="col-12 col-xl-2 px-0">
+                                      <div class="small fw-bold">51%</div>
+                                  </div>
+                                  <div class="col-12 col-xl-10 px-0 px-xl-1">
+                                      <div class="progress progress-lg mb-0">
+                                          <div class="progress-bar bg-dark" role="progressbar" aria-valuenow="51" aria-valuemin="0" aria-valuemax="100" style="width: 51%;"></div>
+                                      </div>
+                                  </div>
+                              </div>
+                          </td>
+                          <td class="text-success">
+                              <div class="d-flex align-items-center">
+                                  <svg class="icon icon-xs me-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>                                   
+                                  <span class="fw-bold">2.45%</span>
+                              </div>
+                          </td>
+                      </tr>
+
+                  </tbody>
+              </table>
+          </div>
+      </div>
+  </div>
+
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

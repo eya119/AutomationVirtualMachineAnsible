@@ -1,0 +1,129 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}VM List{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+    table {
+        width: 100%;
+        margin: auto;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        text-align: left;
+    }
+    th {
+        background-color: #f4f4f4;
+    }
+
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+    
+      <div class="py-4">
+  <nav aria-label="breadcrumb" class="d-none d-md-inline-block">
+    <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
+      <li class="breadcrumb-item">
+        <a href="#">
+          <svg class="icon icon-xxs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+        </a>
+      </li>
+      <li class="breadcrumb-item"><a href="#">Datacenter</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Virtual machines</li>
+    </ol>
+  </nav>
+  <div class="d-flex justify-content-between w-100 flex-wrap">
+    <div class="mb-3 mb-lg-0">
+<h1>VM List</h1>
+    
+    </div></div></div>
+      <div class="col-12 px-0">
+                <div class="card border-0 shadow">
+                    <div class="card-body">
+<table id="vm-list">
+    <thead>
+        <tr>
+            <th style="color: gray">ID</th>
+            <th style="color: gray">Name</th>
+                <th style="color: gray">Status</th>
+               <th style="color: gray">CPU usage </th>
+               <th style="color: gray">Memory</th>
+               <th style="color: gray">uptime</th>
+                <th style="color: gray">Disk</th>
+                <th style="color: gray">Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Data will be populated by JavaScript -->
+    </tbody>
+</table>
+                    </div></div></div>
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+    const ws = new WebSocket('ws://' + window.location.host + '/ws/vm-list/');
+
+    ws.onmessage = function(event) {
+        const vmList = JSON.parse(event.data);
+        const tbody = document.getElementById('vm-list').querySelector('tbody');
+        tbody.innerHTML = '';  // Clear existing rows
+
+        vmList.forEach(vm => {
+            const row = tbody.insertRow();
+
+            row.insertCell(0).textContent = vm.vmid || 'N/A';
+            row.insertCell(1).textContent = vm.name || 'N/A';
+               const statusCell = row.insertCell(2);
+    statusCell.innerHTML = `<div>${vm.status} </div>` || 'N/A';
+    const statuscpu = row.insertCell(3);
+ statuscpu.innerHTML= `<div>${vm.cpu } of ${vm.cpunumb} </div>` || 'N/A';
+
+
+
+
+
+            // Create and insert memory progress bar
+            const memCell = row.insertCell(4);
+            const memPercent = vm.mem ? parseFloat(vm.mem)  : 0;  // Assuming mem is a fraction from 0 to 1
+            memCell.innerHTML = `
+ <div class="row d-flex align-items-center">
+                                  <div class="col-12 col-xl-2 px-0">
+                                      <div class="small fw-bold">${memPercent}% &nbsp;</div>
+                                  </div>
+                                  <div class="col-12 col-xl-10 px-0 px-xl-1">
+                                      <div class="progress progress-lg mb-0">
+                                          <div class="progress-bar bg-black" role="progressbar" aria-valuenow="${memPercent}" aria-valuemin="0" aria-valuemax="100" style="width: ${memPercent}%;"></div>
+                                      </div>
+                                  </div>
+                              </div>
+
+              
+            `;
+            
+            row.insertCell(5).textContent = vm.uptime || 'N/A';
+            row.insertCell(6).textContent = vm.disk || 'N/A';
+            row.insertCell(7).innerHTML =  '<svg xmlns="http://www.w3.org/2000/svg" height="12" width="13.5" viewBox="0 0 576 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M64 0C28.7 0 0 28.7 0 64L0 352c0 35.3 28.7 64 64 64l176 0-10.7 32L160 448c-17.7 0-32 14.3-32 32s14.3 32 32 32l256 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-69.3 0L336 416l176 0c35.3 0 64-28.7 64-64l0-288c0-35.3-28.7-64-64-64L64 0zM512 64l0 224L64 288 64 64l448 0z"/></svg> qemu';
+        });
+    };
+
+    ws.onopen = function() {
+        console.log('WebSocket connection established');
+    };
+
+    ws.onclose = function() {
+        console.log('WebSocket connection closed');
+    };
+</script>
+{% endblock javascripts %}
