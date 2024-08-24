@@ -414,6 +414,51 @@ def start_vm(request,vmid):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)@csrf_exempt
 
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+def snapshot_vm(request, vmid, name, description):
+    if request.method == 'GET':
+        try:
+            # Call the snapshot function with the provided arguments
+            take_snapshot(vmid, name, description)
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'failed', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'failed', 'message': 'Invalid request'}, status=400)
+
+@csrf_exempt
+def take_snapshot(vmid, name, description):
+    try:
+        if not vmid:
+            return JsonResponse({'status': 'error', 'message': 'VM ID not provided'}, status=400)
+
+        if not name or not description:
+            return JsonResponse({'status': 'error', 'message': 'Name or description not provided'}, status=400)
+
+        # Path to your Ansible playbook
+        playbook_path = '/home/hadil/workspace1/playbook_snapshot_vm.yml'
+
+        # Run the Ansible playbook with additional variables
+        result = subprocess.run(
+            [
+                'ansible-playbook', playbook_path,
+                '--extra-vars', f'vmid={vmid} snapshot_name={name} snapshot_description="{description}"'            ],
+            capture_output=True, text=True
+        )
+
+        # Check if the playbook run was successful
+        if result.returncode == 0:
+            return JsonResponse({'status': 'success', 'message': 'Snapshot taken successfully'})
+        else:
+            return JsonResponse({'status': 'error', 'message': result.stderr}, status=500)
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+
+
 
 
 def stop_proxmox_vm_function(request,vmid):
@@ -439,3 +484,25 @@ def stop_proxmox_vm_function(request,vmid):
 
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+def snapshot_list(request, vmid):
+    # Fetch the VM object based on the ID
+    node='proxmox'
+
+    # Connect to Proxmox API
+    proxmox = ProxmoxAPI('https://your-proxmox-url:8006/api2/json', token='your-token')
+
+    # Fetch snapshots for the VM
+    snapshots = proxmox.nodes(node).qemu(vmid).snapshot.get()
+
+    # Prepare data to send to the template
+    snapshot_list = []
+    for snapshot in snapshots:
+        snapshot_list.append({
+            'name': snapshot.get('name'),
+            'description': snapshot.get('description', ''),
+            'date': snapshot.get('creation'),
+        })
+
+    return render(request, 'snapshots/snapshot_list.html', {'snapshots': snapshot_list})

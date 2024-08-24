@@ -22,6 +22,24 @@
     th {
         background-color: #f4f4f4;
     }
+    
+    .button-group .btn {
+    padding: 4px 10px;
+    font-size: 0.875rem; /* Smaller font size */
+    min-width: 80px; /* Reduced minimum width */
+}
+
+.nav-link {
+    padding: 4px 0;
+    font-size: 0.875rem;
+}
+
+h1.h4 {
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.25rem; /* Adjusted header size */
+}
+
 </style>
 {% endblock stylesheets %}
 
@@ -45,33 +63,51 @@
   </nav>
         
         
-  <div class="d-flex justify-content-between w-100 flex-wrap">
+<div class="d-flex justify-content-between align-items-center w-100 flex-wrap">
     <div class="mb-3 mb-lg-0">
-      <h1 class="h4">summary</h1>
+        <h1 class="h4">Summary</h1>
     </div>
-      
-  
-      
-      
-    <button  disabled id="button-start-vm">
-                           {% comment %} <a class="nav-link" href="{% url 'remove_vm' vm.vmid %}">{% endcomment %}
-<a  id="start-vm-link" class="nav-link"><i class="far fa-question-circle me-1"></i> start vm</a>
-    </button> 
-      
-        <button id="button-stop-vm">
-      <a id="stop-vm-link" class="btn btn-outline-gray"><i
-          class="far fa-question-circle me-1"></i> stop vm</a>
-    </button>
-      
-        <button id="button-open-vm" disabled>
-      <a id="link-open-vm" target="_blank"><i
-          class="far fa-question-circle me-1"></i> open vm</a>
-    </button>
-        <button id="remove-vm-button" disabled>
-      <a id="remove-vm" class="btn btn-outline-gray"><i
-          class="far fa-question-circle me-1"></i> remove vm</a>
-    </button>
-  </div>
+
+    <div class="button-group">
+        <button id="button-start-vm" class="btn btn-primary btn-sm me-2" disabled>
+            <a id="start-vm-link" class="nav-link text-white small">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play-fill me-1" viewBox="0 0 16 16">
+                    <path d="M11.596 8.697l-6.363 3.692A.75.75 0 0 1 4 11.75v-7.5a.75.75 0 0 1 1.233-.639l6.363 3.692a.75.75 0 0 1 0 1.294z"/>
+                </svg>
+                Start VM
+            </a>
+        </button>
+
+        <button id="button-stop-vm" class="btn btn-warning btn-sm me-2">
+            <a id="stop-vm-link" class="nav-link text-dark small">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stop-fill me-1" viewBox="0 0 16 16">
+                    <path d="M5.5 3.5A2.5 2.5 0 0 0 3 6v4a2.5 2.5 0 0 0 2.5 2.5h4A2.5 2.5 0 0 0 12 10V6a2.5 2.5 0 0 0-2.5-2.5h-4z"/>
+                </svg>
+                Stop VM
+            </a>
+        </button>
+
+        <button id="button-open-vm" class="btn btn-success btn-sm me-2" disabled>
+            <a id="link-open-vm" class="nav-link text-white small" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-up-right me-1" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8.5 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.707L3.854 13.854a.5.5 0 1 1-.708-.708L11.293 4H9a.5.5 0 0 1-.5-.5z"/>
+                    <path fill-rule="evenodd" d="M13.5 13a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-3.5v9h9v-3.5a.5.5 0 0 1 1 0v4a.5.5 0 0 1-.5.5z"/>
+                </svg>
+                Open VM
+            </a>
+        </button>
+
+        <button id="remove-vm-button" class="btn btn-danger btn-sm" disabled>
+            <a id="remove-vm" class="nav-link text-white small">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill me-1" viewBox="0 0 16 16">
+                    <path d="M5.5 5.5A.5.5 0 0 1 6 5h4a.5.5 0 0 1 .5.5v7A.5.5 0 0 1 10 13H6a.5.5 0 0 1-.5-.5v-7zM2 2.5A.5.5 0 0 1 2.5 2h11a.5.5 0 0 1 .5.5V3H2v-.5zM4.5 4h7l-.5 8H5L4.5 4z"/>
+                </svg>
+                Remove VM
+            </a>
+        </button>
+    </div>
+</div>
+
 </div>
     
                 <div class="col-12 px-0">
@@ -216,32 +252,87 @@
         
         
         
-    var startVmLink = document.getElementById('start-vm-link');
+{% comment %}    var startVmLink = document.getElementById('start-vm-link');
     const vmid ="{{ vmid }}"
 
     // Set the href attribute dynamically
-    startVmLink.href = `/start-vm/${vmid}/`; 
+    startVmLink.href = `/start-vm/${vmid}/`; {% endcomment %}
     
-    var stopVmLink = document.getElementById('stop-vm-link');
+    
+    document.getElementById('start-vm-link').addEventListener('click', function (event) {
+    event.preventDefault(); // Prevent the default link behavior
 
-    // Set the href attribute dynamically
-    stopVmLink.href = `/stop-vm/${vmid}/`;  
-    
-    
-    
+    const notyf = new Notyf({
+        position: {
+            x: 'left',
+            y: 'top',
+        },
+        types: [
+            {
+                type: 'info',
+                background: '#0948B3',
+                icon: {
+                    className: 'fas fa-info-circle',
+                    tagName: 'span',
+                    color: '#fff'
+                },
+                dismissible: false
+            }
+        ]
+    });
 
-{% comment %}   startbutt.addEventListener('click', function(event) 
-     // Show confirmation dialog
-     {if (confirm('Are you sure you want to remove this VM?')) {
-   console.log("cococ4");
-            // Start the VM
-            startVmLinkurl = `/start-vm/${vmid}/`;
-            window.location.href = startVmLinkurl;
+    notyf.open({
+        type: 'info',
+        message: 'wait few seconds while Starting the VM...'
+    });
 
-     }}){% endcomment %}
- 
+    const vmid = "{{ vmid }}";
+    const startVmLink = `/start-vm/${vmid}/`;
+
+    // Wait for a short period before redirecting
+    setTimeout(function () {
+        window.location.href = startVmLink;
+    }, 1500); // Adjust delay as needed
+});
+
+    document.getElementById('stop-vm-link').addEventListener('click', function (event) {
+    event.preventDefault(); // Prevent the default link behavior
+
+    const notyf = new Notyf({
+        position: {
+            x: 'left',
+            y: 'top',
+        },
+        types: [
+            {
+                type: 'info',
+                background: '#b3093f',
+                icon: {
+                    className: 'fas fa-info-circle',
+                    tagName: 'span',
+                    color: '#fff'
+                },
+                dismissible: false
+            }
+        ]
+    });
+
+    notyf.open({
+        type: 'info',
+        message: 'stopping the VM...'
+    });
+
+    const vmid = "{{ vmid }}";
+    const startVmLink =  `/stop-vm/${vmid}/`;  
+
+    // Wait for a short period before redirecting
+    setTimeout(function () {
+        window.location.href = startVmLink;
+    }, 1500); // Adjust delay as needed
+});
     
-  
+    
+    
     
  removebutt.addEventListener('click', function(event) {
     // Show confirmation dialog

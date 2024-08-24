@@ -1,0 +1,26 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}VM Snapshots{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1>Snapshots for VM: {{ vm.name }}</h1>
+    <div class="row">
+        {% for snapshot in snapshots %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">{{ snapshot.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Description:</strong> {{ snapshot.description }}</p>
+                    <p><strong>Date:</strong> {{ snapshot.date }}</p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p>No snapshots found.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

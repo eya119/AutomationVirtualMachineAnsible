@@ -15,7 +15,7 @@ from django.views.decorators.http import require_POST
 
 from apps.home.models import VM
 from apps.home.services.proxmox_service import get_proxmox_nodes, create_vm, get_vm_name_list, delete_vm, \
-    run_ansible_playbook, remove_vm, start_vm, stop_proxmox_vm_function
+    run_ansible_playbook, remove_vm, start_vm, stop_proxmox_vm_function, take_snapshot
 
 
 @login_required(login_url="/login/")
@@ -149,8 +149,28 @@ def removeVm_in_info_vm(request,vmid):
     return  render(request,"home/vm-list.html",{'vmid':vmid})
 
 
+def snapshot_vm(request,vmid,name,description):
+    print(vmid,name,description)
+    if request.method == 'GET':
+        try:
+            # Example function to handle the snapshot
+            take_snapshot(vmid, name, description)
+
+            return render(request, "home/snapshot-list.html", {'vmid': vmid})
+        except Exception as e:
+            return JsonResponse({'status': 'failed', 'message': str(e)}, status=400)
+
+
+
+
+def snapshotlist(request):
+    vms_data = get_vm_name_list()
+    return render(request, 'home/snapshot-list.html',{'vms_data':vms_data})
+
 def removeVmlist(request):
-    return render(request,'home/delete-vm-list.html')
+    vms_data = get_vm_name_list()
+
+    return render(request,'home/delete-vm-list.html',{'vms_data':vms_data})
 
 
 
