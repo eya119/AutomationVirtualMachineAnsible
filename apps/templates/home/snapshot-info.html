@@ -4,7 +4,9 @@
 
 {% block content %}
 <div class="container py-4">
+{% comment %}
     <h1>Snapshots for VM: {{ vm.name }}</h1>
+{% endcomment %}
     <div class="row">
         {% for snapshot in snapshots %}
         <div class="col-md-4 mb-3">

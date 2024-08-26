@@ -15,7 +15,7 @@ from django.views.decorators.http import require_POST
 
 from apps.home.models import VM
 from apps.home.services.proxmox_service import get_proxmox_nodes, create_vm, get_vm_name_list, delete_vm, \
-    run_ansible_playbook, remove_vm, start_vm, stop_proxmox_vm_function, take_snapshot
+    run_ansible_playbook, remove_vm, start_vm, stop_proxmox_vm_function, take_snapshot, snapshot_list, editVM
 
 
 @login_required(login_url="/login/")
@@ -161,6 +161,48 @@ def snapshot_vm(request,vmid,name,description):
             return JsonResponse({'status': 'failed', 'message': str(e)}, status=400)
 
 
+
+def editVM_listview(request):
+    return render(request, "home/update-vm-list.html")
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def editVM_view(request, vmid, memory=None, processors=None, disk=None, isoimage=None):
+    if request.method == 'GET':
+        try:
+            # Call the editVM function and capture the result
+            response = editVM(vmid, memory, processors, disk, isoimage)
+            print("Playbook Output:\n", response['output'])  # Print the playbook output to the terminal
+            print("Playbook Errors:\n", response['errors'])  # Print any errors to the terminal
+
+            return render(request, "home/update-vm-list.html")
+        except Exception as e:
+            return JsonResponse({'status': 'failed', 'message': str(e)}, status=400)
+
+@csrf_exempt
+def editVMprocessors_view(request, vmid, processors):
+    if request.method == 'GET':
+        try:
+            # Call the editVM function and capture the result
+            response = editVM(vmid, None, processors, None, None)
+            print("Playbook Output:\n", response['output'])  # Print the playbook output to the terminal
+            print("Playbook Errors:\n", response['errors'])  # Print any errors to the terminal
+
+            return render(request, "home/update-vm-list.html")
+        except Exception as e:
+            return JsonResponse({'status': 'failed', 'message': str(e)}, status=400)
+
+
+
+
+
+
+def snapshot_list_of_one_vm(request, vmid):
+    snapshots= snapshot_list(request, vmid)
+    return render(request, 'home/snapshot-info.html', {'snapshots': snapshots})
 
 
 def snapshotlist(request):

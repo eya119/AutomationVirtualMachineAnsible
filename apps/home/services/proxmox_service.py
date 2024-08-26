@@ -458,6 +458,63 @@ def take_snapshot(vmid, name, description):
 
 
 
+import subprocess
+
+import subprocess
+
+def editVM(vmid, memory=None, processors=None, disk=None, isoimage=None):
+    try:
+        if not vmid:
+            return {'status': 'error', 'message': 'VM ID not provided'}
+
+        results = []
+
+        # Dictionary to map parameters to playbooks
+        playbooks = {
+            'memory': '/home/hadil/workspace1/playbook_update_memory.yml',
+            'processors': '/home/hadil/workspace1/playbook_update_processors.yml',
+            'disk': '/home/hadil/workspace1/playbook_update_disk.yml',
+            'isoimage': '/home/hadil/workspace1/playbook_update_iso.yml'
+        }
+
+        # Dictionary to hold the extra vars for each playbook
+        extra_vars_dict = {
+            'memory': f"vmid={vmid} vm_memory={memory}" if memory else None,
+            'processors': f"vmid={vmid} vm_cores={processors}" if processors else None,
+            'disk': f"vmid={vmid} vm_disk={disk}" if disk else None,
+            'isoimage': f"vmid={vmid} iso_image={isoimage}" if isoimage else None
+        }
+
+        # Iterate over each parameter and execute the corresponding playbook if needed
+        for param in ['memory', 'processors', 'disk', 'isoimage']:
+            playbook_path = playbooks.get(param)
+            extra_vars = extra_vars_dict.get(param)
+
+            if extra_vars:
+                result = subprocess.run(
+                    ['ansible-playbook', playbook_path, '--extra-vars', extra_vars],
+                    capture_output=True, text=True
+                )
+
+                # Capture and return the playbook output and errors
+                output = result.stdout
+                errors = result.stderr
+
+                # Check if the playbook run was successful
+                if result.returncode == 0:
+                    results.append({'status': 'success', 'message': f'{param.capitalize()} updated successfully', 'output': output, 'errors': errors})
+                else:
+                    results.append({'status': 'error', 'message': result.stderr, 'output': output, 'errors': errors})
+
+        if results:
+            return results
+        else:
+            return {'status': 'error', 'message': 'No parameters provided to update', 'output': '', 'errors': ''}
+
+    except Exception as e:
+        return {'status': 'error', 'message': str(e), 'output': '', 'errors': ''}
+
+
 
 
 
@@ -486,23 +543,52 @@ def stop_proxmox_vm_function(request,vmid):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
+
+
+
 def snapshot_list(request, vmid):
-    # Fetch the VM object based on the ID
-    node='proxmox'
+    # Proxmox API details
+    api_url = 'https://your-proxmox-url:8006/api2/json'
+    login_url = f'{api_url}/access/ticket'
+    api_user = 'your-api-user'
+    api_password = 'your-api-password'
 
-    # Connect to Proxmox API
-    proxmox = ProxmoxAPI('https://your-proxmox-url:8006/api2/json', token='your-token')
+    # Login and get ticket and CSRF token
+    login_data = {
+        'username': api_user,
+        'password': api_password
+    }
 
-    # Fetch snapshots for the VM
-    snapshots = proxmox.nodes(node).qemu(vmid).snapshot.get()
+    try:
+        login_response = requests.post(login_url, data=login_data, verify=False)
+        login_response.raise_for_status()
+        data = login_response.json()['data']
+        ticket = data['ticket']
+        csrf_token = data['CSRFPreventionToken']
 
-    # Prepare data to send to the template
-    snapshot_list = []
-    for snapshot in snapshots:
-        snapshot_list.append({
-            'name': snapshot.get('name'),
-            'description': snapshot.get('description', ''),
-            'date': snapshot.get('creation'),
-        })
+        # Setup headers for authenticated requests
+        headers = {
+            'Authorization': f'PVEAuthCookie={ticket}',
+            'CSRFPreventionToken': csrf_token
+        }
 
-    return render(request, 'snapshots/snapshot_list.html', {'snapshots': snapshot_list})
+        # Fetch snapshots for the VM
+        snapshots_url = f'{api_url}/nodes/proxmox/qemu/{vmid}/snapshot'
+        snapshots_response = requests.get(snapshots_url, headers=headers, verify=False)
+        snapshots_response.raise_for_status()
+        snapshots_data = snapshots_response.json()['data']
+
+        # Prepare data for rendering
+        snapshot_list = []
+        for snapshot in snapshots_data:
+            snapshot_list.append({
+                'name': snapshot.get('name'),
+                'description': snapshot.get('description', ''),
+                'date': snapshot.get('creation')
+            })
+
+        return render(request, 'home/snapshot-info.html', {'snapshots': snapshot_list})
+
+    except requests.RequestException as e:
+        return JsonResponse({'status': 'failed', 'message': str(e)}, status=500)
+

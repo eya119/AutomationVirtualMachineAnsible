@@ -1,0 +1,330 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}VM List{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+    table {
+        width: 100%;
+        margin: auto;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        text-align: left;
+    }
+    th {
+        background-color: #f4f4f4;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="py-4">
+  <nav aria-label="breadcrumb" class="d-none d-md-inline-block">
+    <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
+      <li class="breadcrumb-item">
+        <a href="#">
+          <svg class="icon icon-xxs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+        </a>
+      </li>
+      <li class="breadcrumb-item"><a href="#">Datacenter</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Virtual machines</li>
+    </ol>
+  </nav>
+  <div class="d-flex justify-content-between w-100 flex-wrap">
+    <div class="mb-3 mb-lg-0">
+      <h1>Hardware update</h1>
+    </div>
+  </div>
+</div>
+
+<div class="col-12 px-0">
+  <div class="card border-0 shadow">
+    <div class="card-body">
+      <table id="vm-list">
+        <thead>
+          <tr>
+            <th style="color: gray">ID</th>
+            <th style="color: gray">Name</th>
+            <th style="color: gray">Status</th>
+            <th style="color: gray">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Data will be populated by JavaScript -->
+        </tbody>
+      </table>
+
+
+
+
+
+
+                   <!-- Modal Contents list  -->
+<!-- Modal for Memory -->
+<div class="modal fade" id="modal-form-memory" tabindex="-1" role="dialog" aria-labelledby="modal-form-memory" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <div class="card p-3 p-lg-4">
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="text-center text-md-center mb-4 mt-md-0">
+                        <h1 class="mb-0 h4">Edit: Memory</h1>
+                    </div>
+                    <div class="mt-4">
+                        <!-- Memory Input -->
+                        <div class="form-group mb-4">
+                            <label for="vm-memory">Memory (MIB)</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="basic-addon1">
+                                    <svg class="icon icon-xs text-gray-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"></path>
+                                    </svg>
+                                </span>
+                                <input type="number" class="form-control" placeholder="Enter memory" id="vm-memory" required>
+                            </div>
+                        </div>
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button class="btn btn-gray-800" id="button-save-memory">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Processor -->
+<div class="modal fade" id="modal-form-processor" tabindex="-1" role="dialog" aria-labelledby="modal-form-processor" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <div class="card p-3 p-lg-4">
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="text-center text-md-center mb-4 mt-md-0">
+                        <h1 class="mb-0 h4">Edit: Processor</h1>
+                    </div>
+                    <div class="mt-4">
+                        <!-- Processor Input -->
+                        <div class="form-group mb-4">
+                            <label for="vm-processor">Processors (Cores)</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="basic-addon2">
+                                    <svg class="icon icon-xs text-gray-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"></path>
+                                    </svg>
+                                </span>
+                                <input type="number" class="form-control" placeholder="Enter processors" id="vm-processor" required>
+                            </div>
+                        </div>
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button class="btn btn-gray-800" id="button-save-processor">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Disk -->
+<div class="modal fade" id="modal-form-disk" tabindex="-1" role="dialog" aria-labelledby="modal-form-disk" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <div class="card p-3 p-lg-4">
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="text-center text-md-center mb-4 mt-md-0">
+                        <h1 class="mb-0 h4">Edit: Disk</h1>
+                    </div>
+                    <div class="mt-4">
+                        <!-- Disk Input -->
+                        <div class="form-group mb-4">
+                            <label for="vm-disk">Disk Size (GB)</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="basic-addon3">
+                                    <svg class="icon icon-xs text-gray-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"></path>
+                                    </svg>
+                                </span>
+                                <input type="number" class="form-control" placeholder="Enter disk size" id="vm-disk" required>
+                            </div>
+                        </div>
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button class="btn btn-gray-800" id="button-save-disk">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for ISO Image -->
+<div class="modal fade" id="modal-form-iso" tabindex="-1" role="dialog" aria-labelledby="modal-form-iso" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <div class="card p-3 p-lg-4">
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="text-center text-md-center mb-4 mt-md-0">
+                        <h1 class="mb-0 h4">Edit: ISO Image</h1>
+                    </div>
+                    <div class="mt-4">
+                        <!-- ISO Image Input -->
+                        <div class="form-group mb-4">
+                            <label for="vm-iso">ISO Image</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="basic-addon4">
+                                    <svg class="icon icon-xs text-gray-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"></path>
+                                    </svg>
+                                </span>
+                                <input type="text" class="form-control" placeholder="Enter ISO image path" id="vm-iso" required>
+                            </div>
+                        </div>
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button class="btn btn-gray-800" id="button-save-iso">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+    const ws = new WebSocket('ws://' + window.location.host + '/ws/vm-list/');
+
+    ws.onmessage = function(event) {
+    const vmList = JSON.parse(event.data);
+    const tbody = document.getElementById('vm-list').querySelector('tbody');
+    tbody.innerHTML = '';  // Clear existing rows
+    vmList.forEach(vm => {
+        const row = tbody.insertRow();
+
+        row.insertCell(0).textContent = vm.vmid || 'N/A';
+        row.insertCell(1).textContent = vm.name || 'N/A';
+        const statusCell = row.insertCell(2);
+        statusCell.innerHTML = `<div>${vm.status} </div>` || 'N/A';
+
+        const actionCell = row.insertCell(3);
+        actionCell.innerHTML = `
+      <div class="dropdown me-1">
+                              <button type="button" class="btn btn-secondary dropdown-toggle" id="dropdownMenuOffset" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="10,20">
+                              edit
+                              </button>
+                              <ul class="dropdown-menu py-0" aria-labelledby="dropdownMenuOffset">
+                                  <li data-bs-toggle="modal" data-bs-target="#modal-form-memory" ><a class="dropdown-item rounded-top" id="id-memory">memory </a></li>
+                                  <li data-bs-toggle="modal" data-bs-target="#modal-form-processor" > <a class="dropdown-item rounded-top" id="id-processor">processors</a></li>
+
+                            
+
+                                  <li><a class="dropdown-item" id="id-bios">bios</a></li>
+                                  <li data-bs-toggle="modal" data-bs-target="#modal-form-iso"><a class="dropdown-item rounded-bottom" id="cd-id">cd/dvd drive (id2)</a></li>
+                                  <li data-bs-toggle="modal" data-bs-target="#modal-form-disk"><a class="dropdown-item rounded-bottom" id="od-disk">hard disk</a></li>
+                                  <li><a class="dropdown-item rounded-bottom" id="id-network">Network device</a></li>
+                              </ul>
+                          </div>
+
+                
+        `;
+
+
+
+
+          var buttonsave = document.getElementById("button-save-memory")
+
+buttonsave.addEventListener('click', function() {
+    try {
+        // Get the input value
+        const memory = document.getElementById('vm-memory').value;
+        const vmid = vm.vmid;
+
+        // Validate the inputs if needed (optional)
+        if (!memory || !vmid) {
+            throw new Error("Memory or VM ID is missing.");
+        }
+
+        // Navigate to the update URL
+        window.location.href = `/update-vm-memory/${vmid}/${memory}/`;
+    } catch (error) {
+        // Show an error prompt in case of an error
+        alert(`Error: ${error.message}`);
+    }
+});
+
+
+        // Processor Modal
+document.getElementById('button-save-processor').addEventListener('click', function() {
+    const processors = document.getElementById('vm-processor').value;
+    const vmid = vm.vmid;
+    window.location.href = `/update-vm-processors/${vmid}/${processors}/`;
+});
+
+// Disk Modal
+document.getElementById('button-save-disk').addEventListener('click', function() {
+    const disk = document.getElementById('vm-disk').value;
+    const vmid = vm.vmid;
+    window.location.href = `/update-vm-disk/${vmid}/${disk}/`;
+});
+
+// ISO Image Modal
+document.getElementById('button-save-iso').addEventListener('click', function() {
+    const isoimage = document.getElementById('vm-iso').value;
+const vmid = vm.vmid;
+    window.location.href = `/update-vm-iso/${vmid}/${isoimage}/`;
+})
+
+
+
+
+
+
+
+
+
+
+
+    });
+
+
+
+
+};
+    ws.onopen = function() {
+        console.log('WebSocket connection established');
+    };
+
+    ws.onclose = function() {
+        console.log('WebSocket connection closed');
+    };
+
+
+
+</script>
+{% endblock javascripts %}

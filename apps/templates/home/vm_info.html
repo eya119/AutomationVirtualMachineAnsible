@@ -224,6 +224,7 @@ h1.h4 {
                 if(data.status==="running"){
                     vname =data.name
                      document.getElementById('button-open-vm').disabled=false
+                    console.log("the vm is ready to be opened")
                 }
                    if(data.status==="stopped"){
                      removebutt.disabled=false
@@ -360,6 +361,7 @@ h1.h4 {
 
        var openVmLink = document.getElementById('link-open-vm');
         document.getElementById('button-open-vm').addEventListener('click', function() {
+            console.log("u clicked open vm")
             window.open(`https://192.168.187.137:8006/?console=kvm&novnc=1&vmid=${vmid}&vmname=${vname}&node=proxmox&resize=off&cmd=/`, '_blank');
         })
 
