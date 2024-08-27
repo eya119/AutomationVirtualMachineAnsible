@@ -460,56 +460,54 @@ def take_snapshot(vmid, name, description):
 
 import subprocess
 
-import subprocess
-
 def editVM(vmid, memory=None, processors=None, disk=None, isoimage=None):
     try:
         if not vmid:
             return {'status': 'error', 'message': 'VM ID not provided'}
 
-        results = []
+        # Prepare the Ansible command
+        playbook_path = '/home/hadil/workspace1/playbook_edit_vm.yml'
+        extra_vars = f"vmid={vmid}"
 
-        # Dictionary to map parameters to playbooks
-        playbooks = {
-            'memory': '/home/hadil/workspace1/playbook_update_memory.yml',
-            'processors': '/home/hadil/workspace1/playbook_update_processors.yml',
-            'disk': '/home/hadil/workspace1/playbook_update_disk.yml',
-            'isoimage': '/home/hadil/workspace1/playbook_update_iso.yml'
-        }
+        if memory:
+            extra_vars += f" vm_memory={memory}"
+            print("memory",memory)
+            result = subprocess.run(
+                ['ansible-playbook', '/home/hadil/workspace1/playbook_upload_memory.yml', '--extra-vars', extra_vars],
+                capture_output=True, text=True
+            )
+        if processors:
+            extra_vars += f" vm_cores={processors}"
+            result = subprocess.run(
 
-        # Dictionary to hold the extra vars for each playbook
-        extra_vars_dict = {
-            'memory': f"vmid={vmid} vm_memory={memory}" if memory else None,
-            'processors': f"vmid={vmid} vm_cores={processors}" if processors else None,
-            'disk': f"vmid={vmid} vm_disk={disk}" if disk else None,
-            'isoimage': f"vmid={vmid} iso_image={isoimage}" if isoimage else None
-        }
+                ['ansible-playbook', '/home/hadil/workspace1/playbook_upload_processors.yml', '--extra-vars', extra_vars],
+                capture_output=True, text=True
+            )
+        if disk:
+            extra_vars += f" new_disk_size={disk}"
+            result = subprocess.run(
+                ['ansible-playbook', '/home/hadil/workspace1/playbook_upload_disk.yml', '--extra-vars', extra_vars],
+                capture_output=True, text=True
+            )
+        if isoimage:
+            extra_vars += f" iso_image={isoimage}"
+            result = subprocess.run(
+                ['ansible-playbook', '/home/hadil/workspace1/playbook_upload_iso.yml','--extra-vars', extra_vars],
+                capture_output=True, text=True
+            )
 
-        # Iterate over each parameter and execute the corresponding playbook if needed
-        for param in ['memory', 'processors', 'disk', 'isoimage']:
-            playbook_path = playbooks.get(param)
-            extra_vars = extra_vars_dict.get(param)
+        # Run the Ansible playbook with the provided variables
 
-            if extra_vars:
-                result = subprocess.run(
-                    ['ansible-playbook', playbook_path, '--extra-vars', extra_vars],
-                    capture_output=True, text=True
-                )
 
-                # Capture and return the playbook output and errors
-                output = result.stdout
-                errors = result.stderr
+        # Capture and return the playbook output and errors
+        output = result.stdout
+        errors = result.stderr
 
-                # Check if the playbook run was successful
-                if result.returncode == 0:
-                    results.append({'status': 'success', 'message': f'{param.capitalize()} updated successfully', 'output': output, 'errors': errors})
-                else:
-                    results.append({'status': 'error', 'message': result.stderr, 'output': output, 'errors': errors})
-
-        if results:
-            return results
+        # Check if the playbook run was successful
+        if result.returncode == 0:
+            return {'status': 'success', 'message': 'VM edited successfully', 'output': output, 'errors': errors}
         else:
-            return {'status': 'error', 'message': 'No parameters provided to update', 'output': '', 'errors': ''}
+            return {'status': 'error', 'message': result.stderr, 'output': output, 'errors': errors}
 
     except Exception as e:
         return {'status': 'error', 'message': str(e), 'output': '', 'errors': ''}

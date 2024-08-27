@@ -57,6 +57,9 @@
             <th style="color: gray">ID</th>
             <th style="color: gray">Name</th>
             <th style="color: gray">Status</th>
+            <th style="color: gray">memory</th>
+            <th style="color: gray">cpu</th>
+            <th style="color: gray">disk</th>
             <th style="color: gray">Actions</th>
           </tr>
         </thead>
@@ -231,8 +234,23 @@
         row.insertCell(1).textContent = vm.name || 'N/A';
         const statusCell = row.insertCell(2);
         statusCell.innerHTML = `<div>${vm.status} </div>` || 'N/A';
+        row.insertCell(3).textContent = vm.maxmem || 'N/A';
+        row.insertCell(4).textContent = vm.cpunumb || 'N/A';
+                row.insertCell(5).innerHTML = vm.maxdisk || 'N/A';
 
-        const actionCell = row.insertCell(3);
+      {% comment %} let diskInfo = '';
+        if (vm['disk-item'] && Array.isArray(vm['disk-item'])) {
+            vm['disk-item'].forEach(disk => {
+                const [diskName, diskSize] = disk;
+                diskInfo += `${diskName}: ${diskSize}<br>`;
+            });
+        } else {
+            diskInfo = 'N/A';
+        }
+
+        row.insertCell(5).innerHTML = diskInfo || 'N/A';
+{% endcomment %}
+        const actionCell = row.insertCell(6);
         actionCell.innerHTML = `
       <div class="dropdown me-1">
                               <button type="button" class="btn btn-secondary dropdown-toggle" id="dropdownMenuOffset" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="10,20">

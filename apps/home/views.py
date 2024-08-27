@@ -196,6 +196,18 @@ def editVMprocessors_view(request, vmid, processors):
             return JsonResponse({'status': 'failed', 'message': str(e)}, status=400)
 
 
+@csrf_exempt
+def editVMdisk_view(request, vmid, disk):
+    if request.method == 'GET':
+        try:
+            # Call the editVM function and capture the result
+            response = editVM(vmid, None, None, disk, None)
+            print("Playbook Output:\n", response['output'])  # Print the playbook output to the terminal
+            print("Playbook Errors:\n", response['errors'])  # Print any errors to the terminal
+
+            return render(request, "home/update-vm-list.html")
+        except Exception as e:
+            return JsonResponse({'status': 'failed', 'message': str(e)}, status=400)
 
 
 

@@ -8,14 +8,14 @@ from apps.home import views
 from apps.home.services.proxmox_service import editVM
 from apps.home.views import get_proxmox_nodes_view, create_proxmox_vm, vm_names, base_view, edit_proxmox_vm, list_vms, \
     removeVm, removeVmlist, start_proxmox_vm, stop_proxmox_vm, removeVm_in_info_vm, snapshot_vm, snapshotlist, \
-    snapshot_list_of_one_vm, editVM_listview, editVM_view, editVMprocessors_view
+    snapshot_list_of_one_vm, editVM_listview, editVM_view, editVMprocessors_view, editVMdisk_view
 
 #from apps.home.views import get_proxmox_nodes_view, create_proxmox_vm
 urlpatterns = [
     path('proxmox/nodes/', get_proxmox_nodes_view, name='proxmox_nodes'),
     path('create-vm/', create_proxmox_vm, name='create_vm'),
     path('update-vm-memory/<int:vmid>/<int:memory>/', editVM_view, name='update-vm-memory'),
-    path('update-vm-disk/<int:vmid>/<int:disk>/', editVM_view, name='update-vm-disk'),
+    path('update-vm-disk/<int:vmid>/<int:disk>/', editVMdisk_view, name='update-vm-disk'),
     path('update-vm-iso/<int:vmid>/<int:iso>/', editVM_view, name='update-vm-iso'),
     path('update-vm-processors/<int:vmid>/<str:processors>/', editVMprocessors_view, name='update-vm-processors'),
     path('editVMlist/', editVM_listview, name='editVMlist'),

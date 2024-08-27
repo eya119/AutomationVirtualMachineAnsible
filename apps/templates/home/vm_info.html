@@ -209,6 +209,7 @@ h1.h4 {
  let removebutt= document.getElementById('remove-vm-button')
  let startbutt= document.getElementById('button-start-vm')
  let stopbutt= document.getElementById('button-stop-vm')
+ let openbutt= document.getElementById('button-open-vm')
         // WebSocket connection
         const ws = new WebSocket('ws://' + window.location.host + '/ws/vm-detail/');
         
@@ -360,7 +361,7 @@ h1.h4 {
     
 
        var openVmLink = document.getElementById('link-open-vm');
-        document.getElementById('button-open-vm').addEventListener('click', function() {
+        openVmLink.addEventListener('click', function() {
             console.log("u clicked open vm")
             window.open(`https://192.168.187.137:8006/?console=kvm&novnc=1&vmid=${vmid}&vmname=${vname}&node=proxmox&resize=off&cmd=/`, '_blank');
         })

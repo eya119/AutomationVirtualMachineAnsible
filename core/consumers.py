@@ -131,19 +131,22 @@ class VMListConsumer(AsyncWebsocketConsumer):
         try:
             proxmox = ProxmoxAPI(proxmox_server, user=f"{username}@{realm}", password=password, verify_ssl=False)
             vm_status = proxmox.nodes('proxmox').qemu(vmid).status.current.get()
-
+ 
             return {
+
                 'vmid': vmid,
                 'name': vm_status.get('name', 'N/A'),
                 'status': vm_status.get('status', 'N/A'),
                 'cpu': f"{vm_status.get('cpu', 'N/A')*100:.2f}%",
                 'cpunumb': f"{vm_status.get('cpus', 'N/A') }",
                 #'mem': f"{vm_status.get('mem', 'N/A')}MB",
+                'maxmem': f"{round(vm_status.get('maxmem', 0) / (1024**3), 2)}GB",
                 'mem': f"{(vm_status.get('mem', 0) / vm_status.get('maxmem', 1)) * 100:.2f}%",
                 'uptime': f"{vm_status.get('uptime', 0) // 3600}:h {(vm_status.get('uptime', 0) % 3600) // 60}:m {vm_status.get('uptime', 0) % 60}:s",
 
                 # Calculate memory usage as a percentage
 
+                'maxdisk': f"{round(vm_status.get('maxdisk', 0) / (1024**3), 2)}GB",
                 'disk': f"{vm_status.get('disk', 'N/A')}GB"
             }
         except Exception as e:
