@@ -443,7 +443,7 @@ def take_snapshot(vmid, name, description):
         result = subprocess.run(
             [
                 'ansible-playbook', playbook_path,
-                '--extra-vars', f'vmid={vmid} snapshot_name={name} snapshot_description="{description}"'            ],
+                '--extra-vars', f'vmid={vmid} snapshot_name={name} description="{description}"'            ],
             capture_output=True, text=True
         )
 
@@ -456,7 +456,31 @@ def take_snapshot(vmid, name, description):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
+@csrf_exempt
+def remove_snapshot_service(vmid):
+    try:
+        if not vmid:
+            return JsonResponse({'status': 'error', 'message': 'VM ID not provided'}, status=400)
 
+        # Path to your Ansible playbook
+        playbook_path = '/home/hadil/workspace1/playbook_delete_snapshot.yml'
+
+        # Run the Ansible playbook with additional variables
+        result = subprocess.run(
+            [
+                'ansible-playbook', playbook_path,
+                '--extra-vars', f'vmid={vmid} "'            ],
+            capture_output=True, text=True
+        )
+
+        # Check if the playbook run was successful
+        if result.returncode == 0:
+            return JsonResponse({'status': 'success', 'message': 'Snapshot removed successfully'})
+        else:
+            return JsonResponse({'status': 'error', 'message': result.stderr}, status=500)
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 import subprocess
 

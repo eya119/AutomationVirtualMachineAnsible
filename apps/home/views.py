@@ -9,14 +9,12 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
-
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-
 from apps.home.models import VM
 from apps.home.services.proxmox_service import get_proxmox_nodes, create_vm, get_vm_name_list, delete_vm, \
-    run_ansible_playbook, remove_vm, start_vm, stop_proxmox_vm_function, take_snapshot, snapshot_list, editVM
-
+    run_ansible_playbook, remove_vm, start_vm, stop_proxmox_vm_function, take_snapshot, snapshot_list, editVM, \
+    remove_snapshot_service
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 @login_required(login_url="/login/")
 def index(request):
@@ -90,13 +88,6 @@ def stop_proxmox_vm(request,vmid):
     stop_proxmox_vm_function(request,vmid)
     return render(request, "home/vm_info.html", {'vmid': vmid})
 
-
-
-
-
-
-
-
 def edit_proxmox_vm(request):
     vms_data = get_vm_name_list()
     return  render (request,"home/edit-vm.html",{'vms_data': vms_data})
@@ -117,15 +108,6 @@ def vm_names(request):
     return render(request,'home/dashboard.html',{'vms_data': vms_data})
 def stream_ansible_logs(request):
     stream_ansible_logs(request)
-
-
-
-
-
-# render views #
-
-#def dashboard_view(request):
- #   return render(request, 'home/dashboard.html')
 
 
 def vmInfo(request,vmid):
@@ -161,13 +143,24 @@ def snapshot_vm(request,vmid,name,description):
             return JsonResponse({'status': 'failed', 'message': str(e)}, status=400)
 
 
+def remove_snapshot_vm(request,vmid):
+
+    if request.method == 'GET':
+        try:
+            # Example function to handle the snapshot
+            remove_snapshot_service(vmid)
+
+            return render(request, "home/snapshot-list.html", {'vmid': vmid})
+        except Exception as e:
+            return JsonResponse({'status': 'failed', 'message': str(e)}, status=400)
+
+
 
 def editVM_listview(request):
     return render(request, "home/update-vm-list.html")
 
 
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+
 
 @csrf_exempt
 def editVM_view(request, vmid, memory=None, processors=None, disk=None, isoimage=None):
@@ -235,3 +228,20 @@ def base_view(request):
     vms_data = get_vm_name_list()  # Retrieve VM names and states for the sidebar
     return render(request, 'layouts/base.html', {'vms_data': vms_data})
 
+# views.py
+from django.shortcuts import render
+from django.http import JsonResponse
+from proxmoxer import ProxmoxAPI
+from django.conf import settings
+
+def get_vm_snapshots(request, vmid):
+    try:
+        # Proxmox API connection
+        proxmox = ProxmoxAPI('192.168.187.137', user='root@pam', password='00000', verify_ssl=False, port=8006)
+        # Retrieve the snapshots of the specified VM
+        snapshots = proxmox.nodes("proxmox").qemu(vmid).snapshot.get()
+
+        # Render the snapshots in the template
+        return render(request, 'home/vm_snapshots.html', {'snapshots': snapshots, 'vmid': vmid})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

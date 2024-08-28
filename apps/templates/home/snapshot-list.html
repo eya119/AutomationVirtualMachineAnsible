@@ -185,8 +185,36 @@
                 const snapshotUrl = `/snapshot/${vm.vmid}/${name}/${description}/`;
                 actionCell.innerHTML = `
 
-   <button type="button" class="btn btn-block btn-gray-800 mb-3" data-bs-toggle="modal" data-bs-target="#modal-form"> take snapshot
-                              </button>
+
+
+
+<div class="button-group">
+        <button  class="btn btn-primary btn-sm me-2"   type="button" class="btn btn-block btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modal-form" >
+
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play-fill me-1" viewBox="0 0 16 16">
+                    <path d="M11.596 8.697l-6.363 3.692A.75.75 0 0 1 4 11.75v-7.5a.75.75 0 0 1 1.233-.639l6.363 3.692a.75.75 0 0 1 0 1.294z"/>
+                </svg>
+ take snapshot
+        </button>
+
+        <button class="btn btn-warning btn-sm me-2">
+           <a href="/vm/${vm.vmid}/snapshots/" class="nav-link text-dark small">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stop-fill me-1" viewBox="0 0 16 16">
+                    <path d="M5.5 3.5A2.5 2.5 0 0 0 3 6v4a2.5 2.5 0 0 0 2.5 2.5h4A2.5 2.5 0 0 0 12 10V6a2.5 2.5 0 0 0-2.5-2.5h-4z"/>
+                </svg>
+              view snapshots
+            </a>
+        </button>
+
+
+
+
+
+
+
+
+
+
 
         `;
     document.getElementById("button-save").addEventListener('click', function (event) {
