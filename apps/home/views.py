@@ -12,7 +12,7 @@ from django.shortcuts import render
 from apps.home.models import VM
 from apps.home.services.proxmox_service import get_proxmox_nodes, create_vm, get_vm_name_list, delete_vm, \
     run_ansible_playbook, remove_vm, start_vm, stop_proxmox_vm_function, take_snapshot, snapshot_list, editVM, \
-    remove_snapshot_service
+    remove_snapshot_service, backupvm
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
@@ -158,6 +158,12 @@ def remove_snapshot_vm(request,vmid):
 
 def editVM_listview(request):
     return render(request, "home/update-vm-list.html")
+@csrf_exempt
+def backupvmView(request):
+    return backupvm(request)
+@csrf_exempt
+def showvmbackup(request):
+    return render(request, "home/backup-vm.html")
 
 
 

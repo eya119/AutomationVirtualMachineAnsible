@@ -572,8 +572,8 @@ def snapshot_list(request, vmid):
     # Proxmox API details
     api_url = 'https://your-proxmox-url:8006/api2/json'
     login_url = f'{api_url}/access/ticket'
-    api_user = 'your-api-user'
-    api_password = 'your-api-password'
+    api_user = 'root@pam'
+    api_password = '00000'
 
     # Login and get ticket and CSRF token
     login_data = {
@@ -613,4 +613,34 @@ def snapshot_list(request, vmid):
 
     except requests.RequestException as e:
         return JsonResponse({'status': 'failed', 'message': str(e)}, status=500)
+@csrf_exempt
+def backupvm(request):
+    if request.method == 'POST':
+        vmid = request.POST.get('vmid')
+        backup_mode = request.POST.get('backup_mode')
+        compress = request.POST.get('compress')
+        storage = request.POST.get('storage')
+        if not vmid:
+            return JsonResponse({'error': 'VM ID is required'}, status=400)
+
+            # Path to your Ansible playbook
+        playbook_path = '/home/hadil/workspace1/playbook_backup_create.yml'
+
+        # Run the Ansible playbook
+        result = subprocess.run(
+  ['ansible-playbook', playbook_path, '--extra-vars', f'vmid={vmid}  backup_mode={backup_mode}   compress={ compress} storage={storage}'],
+                capture_output=True, text=True
+            )
+
+        if result.returncode == 0:
+            return JsonResponse({'status': 'success', 'output': result.stdout})
+        else:
+              return JsonResponse({'status': 'error', 'output': result.stderr}, status=500)
+
+
+
+
+
+
+
 

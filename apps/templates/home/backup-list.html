@@ -1,0 +1,174 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}VM List{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+    table {
+        width: 100%;
+        margin: auto;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        text-align: left;
+    }
+    th {
+        background-color: #f4f4f4;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="py-4">
+  <nav aria-label="breadcrumb" class="d-none d-md-inline-block">
+    <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
+      <li class="breadcrumb-item">
+        <a href="#">
+          <svg class="icon icon-xxs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+        </a>
+      </li>
+      <li class="breadcrumb-item"><a href="#">Datacenter</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Virtual machines</li>
+    </ol>
+  </nav>
+  <div class="d-flex justify-content-between w-100 flex-wrap">
+    <div class="mb-3 mb-lg-0">
+      <h1>VM List</h1>
+    </div>
+  </div>
+</div>
+
+<div class="col-12 px-0">
+  <div class="card border-0 shadow">
+    <div class="card-body">
+      <table id="vm-list">
+        <thead>
+          <tr>
+            <th style="color: gray">ID</th>
+            <th style="color: gray">Name</th>
+            <th style="color: gray">Status</th>
+            <th style="color: gray">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Data will be populated by JavaScript -->
+        </tbody>
+      </table>
+        
+        
+        
+           <!-- Modal Content -->
+<div class="modal fade" id="modal-form" tabindex="-1" role="dialog" aria-labelledby="modal-form" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Virtual Machine</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="#" class="mt-4">
+                    
+                          <!-- Storage Select -->
+                    <div class="mb-3">
+                        <label for="vm-storage" class="form-label">Storage</label>
+                        <select class="form-select" id="vm-storage" required>
+                            <option value="" disabled selected>Select Storage</option>
+                            <option value="local">Local LVM</option>
+                            <option value="network-storage">Network Storage</option>
+                            <option value="external-disk">External Disk</option>
+                        </select>
+                    </div>
+                    <!-- End of Storage Select -->
+                    <!-- VM Type Select -->
+                    <div class="mb-3">
+                        <label for="vm-type" class="form-label">compression</label>
+                        <select class="form-select" id="vm-type" required>
+                            <option value="" disabled selected>Select compression Type</option>
+                            <option value="lzo">lzo</option>
+                            <option value="gzip">gzip</option>
+                            <option value="zstd">zstd</option>
+                        </select>
+                    </div>
+                    <!-- End of VM Type Select -->
+
+                    <!-- VM Template Select -->
+                    <div class="mb-3">
+                        <label for="vm-template" class="form-label">mode</label>
+                        <select class="form-select" id="vm-template" required>
+                            <option value="" disabled selected>Select a mode</option>
+                            <option value="snapshot">Snapshot</option>
+                            <option value="suspend">Suspended</option>
+                            <option value="stop">Stopped</option>
+                        </select>
+                    </div>
+                    <!-- End of VM Template Select -->
+
+              
+
+                    <!-- Submit Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" id="button-save">backup</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+                          <!-- End of Modal Content -->
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+    const ws = new WebSocket('ws://' + window.location.host + '/ws/vm-list/');
+
+    ws.onmessage = function(event) {
+    const vmList = JSON.parse(event.data);
+    const tbody = document.getElementById('vm-list').querySelector('tbody');
+    tbody.innerHTML = '';  // Clear existing rows
+
+    vmList.forEach(vm => {
+        const row = tbody.insertRow();
+
+        row.insertCell(0).textContent = vm.vmid || 'N/A';
+        row.insertCell(1).textContent = vm.name || 'N/A';
+        const statusCell = row.insertCell(2);
+        statusCell.innerHTML = `<div>${vm.status} </div>` || 'N/A';
+
+        const actionCell = row.insertCell(3);
+       
+        const deleteUrl = `/delete-vm/${vm.vmid}/`;  // Dynamically construct the delete URL
+        actionCell.innerHTML = `
+       
+<div class="button-group">
+        <button  class="btn btn-primary btn-sm me-2"   type="button" class="btn btn-block btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modal-form" >
+
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play-fill me-1" viewBox="0 0 16 16">
+                    <path d="M11.596 8.697l-6.363 3.692A.75.75 0 0 1 4 11.75v-7.5a.75.75 0 0 1 1.233-.639l6.363 3.692a.75.75 0 0 1 0 1.294z"/>
+                </svg>
+ backup
+        </button>
+        `;
+    });
+};
+    ws.onopen = function() {
+        console.log('WebSocket connection established');
+    };
+
+    ws.onclose = function() {
+        console.log('WebSocket connection closed');
+    };
+</script>
+{% endblock javascripts %}
