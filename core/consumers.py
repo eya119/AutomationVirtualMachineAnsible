@@ -38,6 +38,9 @@ class VMDetailConsumer(AsyncWebsocketConsumer):
                         pass
                 self.fetch_status_task = asyncio.create_task(self.periodic_status_fetch())
 
+
+
+
     async def periodic_status_fetch(self):
         while True:
             if self.vm_id:
@@ -151,3 +154,63 @@ class VMListConsumer(AsyncWebsocketConsumer):
             }
         except Exception as e:
             return {'error': f"Failed to fetch VM status for VM ID {vmid}: {str(e)}"}
+
+
+
+
+import json
+from channels.generic.websocket import AsyncWebsocketConsumer
+from asgiref.sync import sync_to_async
+import subprocess
+
+class BackupConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.channel_name = self.scope['url_route']['kwargs']['channel_name']
+        await self.channel_layer.group_add(
+            self.channel_name,
+            self.channel_name
+        )
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(
+            self.channel_name,
+            self.channel_name
+        )
+
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        vmid = data.get('vmid')
+        backup_mode = data.get('backup_mode')
+        compress = data.get('compress')
+        storage = data.get('storage')
+        protect = data.get('protect')
+        note = data.get('note')
+
+        # Run Ansible playbook asynchronously
+        await self.run_playbook(vmid, backup_mode, compress, storage, protect, note)
+
+    async def run_playbook(self, vmid, backup_mode, compress, storage, protect, note):
+        # Command to run the playbook (adjust as necessary)
+        command = [
+            'ansible-playbook',
+            '/home/hadil/workspace1/playbook_backup_create.yml',
+            '--extra-vars',
+            json.dumps({
+                'vmid': vmid,
+                'backup_mode': backup_mode,
+                'compress': compress,
+                'storage': storage,
+                'protect': protect,
+                'note': note
+            })
+        ]
+
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        for line in process.stdout:
+            await self.send(text_data=json.dumps({'log': line.strip()}))
+        for line in process.stderr:
+            await self.send(text_data=json.dumps({'log': line.strip()}))
+
+
+

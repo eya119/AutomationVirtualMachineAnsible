@@ -70,8 +70,10 @@ def create_proxmox_vm(request):
     # Extract status, message, and logs from the result
     status = vm_creation_result.get('status')
     msg = vm_creation_result.get('msg', '')
-    logs = vm_creation_result.get('logs', '')
+    output = vm_creation_result.get('output', '')
+    logs=""
 
+    print ("eye the logs in django",output)
     return render(request, 'home/create-vm.html', {
         'vms_data': vms_data,
         'status': status,
@@ -131,28 +133,24 @@ def removeVm_in_info_vm(request,vmid):
     return  render(request,"home/vm-list.html",{'vmid':vmid})
 
 
-def snapshot_vm(request,vmid,name,description):
-    print(vmid,name,description)
-    if request.method == 'GET':
-        try:
-            # Example function to handle the snapshot
-            take_snapshot(vmid, name, description)
-
-            return render(request, "home/snapshot-list.html", {'vmid': vmid})
-        except Exception as e:
-            return JsonResponse({'status': 'failed', 'message': str(e)}, status=400)
+def snapshot_vm(request):
 
 
-def remove_snapshot_vm(request,vmid):
+   return  take_snapshot(request)
+
+
+
+from django.shortcuts import redirect
+from django.http import JsonResponse
+def remove_snapshot_vm(request,vmid,snapshotName):
 
     if request.method == 'GET':
-        try:
-            # Example function to handle the snapshot
-            remove_snapshot_service(vmid)
 
-            return render(request, "home/snapshot-list.html", {'vmid': vmid})
-        except Exception as e:
-            return JsonResponse({'status': 'failed', 'message': str(e)}, status=400)
+            # Example function to handle the snapshot
+         remove_snapshot_service(vmid,snapshotName)
+    return redirect(f'/vm/{vmid}/snapshots/')
+
+
 
 
 
@@ -160,10 +158,13 @@ def editVM_listview(request):
     return render(request, "home/update-vm-list.html")
 @csrf_exempt
 def backupvmView(request):
-    return backupvm(request)
+    backupvm(request)
+    return redirect("/showvmbackup/")
+
+    return render(request, "home/update-vm-list.html")
 @csrf_exempt
 def showvmbackup(request):
-    return render(request, "home/backup-vm.html")
+    return render(request, "home/backup-list.html")
 
 
 
@@ -251,3 +252,90 @@ def get_vm_snapshots(request, vmid):
         return render(request, 'home/vm_snapshots.html', {'snapshots': snapshots, 'vmid': vmid})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+#
+# def get_all_backups_view(request,storage,vmid):
+#     get_all_backups(request,storage,vmid)
+#     return render(request, 'layouts/base.html', )
+
+
+def backups_list(request, vmid):
+    api_url = 'https://192.168.187.137:8006/api2/json'
+    login_url = f'{api_url}/access/ticket'
+    api_user = 'root@pam'
+    api_password = '00000'
+    node = 'proxmox'  # Replace with your Proxmox node name
+    storage = 'local'  # Replace with your storage name
+
+    # Login and get ticket and CSRF token
+    login_data = {
+        'username': api_user,
+        'password': api_password
+    }
+
+    try:
+        # Perform login request
+        login_response = requests.post(login_url, data=login_data, verify=False)
+        login_response.raise_for_status()
+        data = login_response.json()['data']
+        ticket = data['ticket']
+        csrf_token = data['CSRFPreventionToken']
+
+        # Setup headers for authenticated requests
+        headers = {
+            'Authorization': f'PVEAuthCookie={ticket}',
+            'CSRFPreventionToken': csrf_token
+        }
+
+        # Fetch backups from the storage
+        backups_url = f'{api_url}/nodes/{node}/storage/{storage}/content'
+        backups_response = requests.get(backups_url, headers=headers, verify=False)
+        backups_response.raise_for_status()
+        backups_data = backups_response.json()
+
+        # Filter backups by VM ID
+        if 'data' in backups_data:
+            backups = [backup for backup in backups_data['data'] if backup.get('vmid') == int(vmid)]
+        else:
+            backups = []
+
+        # Render HTML template with filtered backups data
+        return render(request, 'home/backups_list.html', {'backups': backups, 'vmid': vmid})
+
+    except requests.RequestException as e:
+        return HttpResponse(f'Error: {str(e)}', status=500)
+
+
+@csrf_exempt
+def restore(request):
+    if request.method == 'POST':
+        vmid = request.POST.get('vmid')
+
+        print(f"VM ID: {vmid}")
+
+        # Validate input
+        if not vmid:
+            return JsonResponse({'error': 'VM ID is required'}, status=400)
+
+        # Path to your Ansible playbook
+        playbook_path = '/home/hadil/workspace1/playbook_backup_create.yml'
+
+        # Run the Ansible playbook
+        result = subprocess.run(
+            ['ansible-playbook',playbook_path,'-i', '/home/hadil/workspace1/inventory.ini', '--extra-vars', f'vmid={vmid} backup_mode={backup_mode} compress={compress} storage={storage} protect={protect} note={note}'],
+            capture_output=True, text=True
+        )
+        print("me herererere")
+        # Get the full output
+        print("Playbook Output (stdout):")
+        print(result.stdout)
+
+        # To print the standard error
+        print("Playbook Errors (stderr):")
+        print(result.stderr)
+        full_output = result.stdout + result.stderr
+        if result.returncode == 0:
+             JsonResponse({'status': 'success', 'output': full_output})
+             return  redirect("/showvmbackup/")
+        else:
+            return JsonResponse({'status': 'error', 'output': full_output}, status=500)

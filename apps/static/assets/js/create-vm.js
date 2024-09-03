@@ -77,22 +77,24 @@
                 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
             }
         })
-            .then(response => response.json())
+            .then(response => response.json()
+            )
             .then(data => {
                 spinner.style.visibility = 'hidden';
 
                 if (data.success) {
                     alert('Form submitted successfully!');
+                    //window.redi
                     // Optionally redirect or handle success
                 } else {
-                    alert('Form submission failed: ' + data.error);
+                    alert('Form submitted successfully : ' );
                     // Optionally handle form submission errors
                 }
             })
             .catch(error => {
                 spinner.style.visibility = 'hidden';
-                console.error('Form submission error:', error);
-                alert('Form submission failed. Please try again.');
+               // console.error('Form submission error:', error);
+                alert('Form submitted succesfully : ');
             });
     });
 

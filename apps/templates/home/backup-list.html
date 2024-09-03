@@ -22,6 +22,27 @@
     th {
         background-color: #f4f4f4;
     }
+    
+    .loader {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
 {% endblock stylesheets %}
 
@@ -77,22 +98,21 @@
             </div>
             <div class="modal-body">
                 <form action="#" class="mt-4">
-                    
+
                           <!-- Storage Select -->
                     <div class="mb-3">
                         <label for="vm-storage" class="form-label">Storage</label>
                         <select class="form-select" id="vm-storage" required>
                             <option value="" disabled selected>Select Storage</option>
                             <option value="local">Local LVM</option>
-                            <option value="network-storage">Network Storage</option>
-                            <option value="external-disk">External Disk</option>
+
                         </select>
                     </div>
                     <!-- End of Storage Select -->
                     <!-- VM Type Select -->
                     <div class="mb-3">
                         <label for="vm-type" class="form-label">compression</label>
-                        <select class="form-select" id="vm-type" required>
+                        <select class="form-select" id="vm-compression" required>
                             <option value="" disabled selected>Select compression Type</option>
                             <option value="lzo">lzo</option>
                             <option value="gzip">gzip</option>
@@ -104,7 +124,7 @@
                     <!-- VM Template Select -->
                     <div class="mb-3">
                         <label for="vm-template" class="form-label">mode</label>
-                        <select class="form-select" id="vm-template" required>
+                        <select class="form-select" id="vm-mode" required>
                             <option value="" disabled selected>Select a mode</option>
                             <option value="snapshot">Snapshot</option>
                             <option value="suspend">Suspended</option>
@@ -112,14 +132,42 @@
                         </select>
                     </div>
                     <!-- End of VM Template Select -->
+                                            <div class="mb-3">
+                         <label for="backup-protect">Protect Backup</label>
 
-              
+            <input class="form-check-input" type="radio" name="backup-protect" id="protect-yes" value="yes" checked>
+            <label class="form-check-label" for="protect-yes">
+                Yes
+            </label>
+
+
+
+            <input class="form-check-input" type="radio" name="backup-protect" id="protect-no" value="no">
+            <label class="form-check-label" for="protect-no">
+                No
+            </label>
+
+
+                    </div>
+
+                      <div class="mb-3">
+                        <label for="vm-note" class="form-label">notes</label>
+                                <input type="text" class="form-control" placeholder="Enter VM name" id="vm-note" required>
+                      </div>
+
+
+
 
                     <!-- Submit Button -->
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary" id="button-save">backup</button>
+                        <button type="submit" class="btn btn-primary" id="button-save"> backup</button>
                     </div>
                 </form>
+                  <!-- Loader Content -->
+    <div id="loader-container" style="display: none; text-align: center; margin-top: 20px;">
+        <div class="loader"></div>
+        <p>Please be patient, it's getting created...</p>
+    </div>
             </div>
         </div>
     </div>
@@ -132,37 +180,152 @@
 
 {% block javascripts %}
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
     const ws = new WebSocket('ws://' + window.location.host + '/ws/vm-list/');
 
     ws.onmessage = function(event) {
-    const vmList = JSON.parse(event.data);
-    const tbody = document.getElementById('vm-list').querySelector('tbody');
-    tbody.innerHTML = '';  // Clear existing rows
+        const vmList = JSON.parse(event.data);
+        const tbody = document.getElementById('vm-list').querySelector('tbody');
+        tbody.innerHTML = '';  // Clear existing rows
 
-    vmList.forEach(vm => {
-        const row = tbody.insertRow();
+        vmList.forEach(vm => {
+            const row = tbody.insertRow();
+            row.insertCell(0).textContent = vm.vmid || 'N/A';
+            const vmidText = row.cells[0].textContent;
+            row.insertCell(1).textContent = vm.name || 'N/A';
+            const statusCell = row.insertCell(2);
+            statusCell.innerHTML = `<div>${vm.status}</div>` || 'N/A';
+            const buttonId = vm.vmid;
+            const actionCell = row.insertCell(3);
+            actionCell.innerHTML = `
+                <div class="button-group">
+                    <button id="${buttonId}" class="btn btn-primary btn-sm me-2" type="button" data-bs-toggle="modal" data-bs-target="#modal-form">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play-fill me-1" viewBox="0 0 16 16">
+                            <path d="M11.596 8.697l-6.363 3.692A.75.75 0 0 1 4 11.75v-7.5a.75.75 0 0 1 1.233-.639l6.363 3.692a.75.75 0 0 1 0 1.294z"/>
+                        </svg>
+                        backup
+                    </button>
+                </div>
+            `;
+              // Attach an event listener to the button to log its id
+    document.getElementById(buttonId).addEventListener('click', function() {
+        console.log('Button ID:', this.id);
+            document.getElementById('button-save').addEventListener('click', function (event) {
 
-        row.insertCell(0).textContent = vm.vmid || 'N/A';
-        row.insertCell(1).textContent = vm.name || 'N/A';
-        const statusCell = row.insertCell(2);
-        statusCell.innerHTML = `<div>${vm.status} </div>` || 'N/A';
 
-        const actionCell = row.insertCell(3);
-       
-        const deleteUrl = `/delete-vm/${vm.vmid}/`;  // Dynamically construct the delete URL
-        actionCell.innerHTML = `
-       
-<div class="button-group">
-        <button  class="btn btn-primary btn-sm me-2"   type="button" class="btn btn-block btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modal-form" >
+// Show the loader and message
+        document.getElementById('loader-container').style.display = 'block';
+        // Display the ID (e.g., in the modal or console)
 
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play-fill me-1" viewBox="0 0 16 16">
-                    <path d="M11.596 8.697l-6.363 3.692A.75.75 0 0 1 4 11.75v-7.5a.75.75 0 0 1 1.233-.639l6.363 3.692a.75.75 0 0 1 0 1.294z"/>
-                </svg>
- backup
-        </button>
-        `;
+        event.preventDefault();
+        console.log("he")
+        var vmid = buttonId
+        var mode = document.getElementById('vm-mode').value;
+        var compression = document.getElementById('vm-compression').value;
+        var storage = document.getElementById('vm-storage').value;
+        var note = document.getElementById('vm-note').value;
+        var protect = document.querySelector('input[name="backup-protect"]:checked').value;
+
+        console.log('VM ID:', vmid);
+        console.log('Mode:', mode);
+        console.log('Compression:', compression);
+        console.log('Storage:', storage);
+        console.log('Note:', note);
+        console.log('Protect:', protect);
+        fetch('/createbackup/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: 'vmid=' + encodeURIComponent(vmid) +
+                '&mode=' + encodeURIComponent(mode) +
+                '&compression=' + encodeURIComponent(compression) +
+                '&storage=' + encodeURIComponent(storage) +
+                '&protect=' + encodeURIComponent(protect) +
+                '&note=' + encodeURIComponent(note)
+        })
+            .then(response => {response.json()
+                console.log(response)
+            
+             window.location.href=`/showvmbackup/` 
+            }
+            
+            )
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                       window.location.href=`/showvmbackup/` 
+                } else {
+                    console.error('Error:', data.error);
+                }
+            })
+            .catch(error => console.error('Request failed:', error));
     });
-};
+
+    });
+
+        });
+    };
+
+
+{% comment %}    const table = document.getElementById('vm-list');
+
+// Get the first row (assuming there's at least one row)
+const firstRow = table.rows[0];{% endcomment %}
+
+// Iterate over each cell in the first row
+
+{% comment %}
+   document.getElementById('button-save').addEventListener('click', function (event) {
+
+    const currentRow = event.target.closest('tr');
+
+        // Get the ID from the first column (first cell) of the current row
+        const rowId = currentRow.cells[0].textContent;
+
+        // Display the ID (e.g., in the modal or console)
+        console.log('Row ID:', rowId);
+        event.preventDefault();
+        console.log("he")
+        var vmid = rowId
+        var mode = document.getElementById('vm-mode').value;
+        var compression = document.getElementById('vm-compression').value;
+        var storage = document.getElementById('vm-storage').value;
+        var note = document.getElementById('vm-note').value;
+        var protect = document.querySelector('input[name="backup-protect"]:checked').value;
+
+        console.log('VM ID:', vmid);
+        console.log('Mode:', mode);
+        console.log('Compression:', compression);
+        console.log('Storage:', storage);
+        console.log('Note:', note);
+        console.log('Protect:', protect);
+        fetch('/createbackup/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: 'vmid=' + encodeURIComponent(vmid) +
+                '&mode=' + encodeURIComponent(mode) +
+                '&compression=' + encodeURIComponent(compression) +
+                '&storage=' + encodeURIComponent(storage) +
+                '&protect=' + encodeURIComponent(protect) +
+                '&note=' + encodeURIComponent(note)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    console.error('Error:', data.error);
+                }
+            })
+            .catch(error => console.error('Request failed:', error));
+    });
+{% endcomment %}
+
     ws.onopen = function() {
         console.log('WebSocket connection established');
     };
@@ -170,5 +333,7 @@
     ws.onclose = function() {
         console.log('WebSocket connection closed');
     };
+});
+
 </script>
 {% endblock javascripts %}

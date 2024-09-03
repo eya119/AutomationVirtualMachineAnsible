@@ -92,7 +92,9 @@ def create_vm(request):
             roles_path=roles_path,
             extravars=extravars
         )
-
+        # Convert the Ansible Runner output to a string for HTML rendering
+        stdout_output = '\n'.join(result.stdout.readlines())
+        print ("jjjjjj",stdout_output)
         # Checking the result of the playbook run
         if result.rc == 0:
             try:
@@ -103,13 +105,8 @@ def create_vm(request):
                         if 'stdout' in event:
                             # Extract the JSON output from the Ansible task that registered the IP address
                             output = event['stdout']
-                            if output:
-                                try:
-                                    data = json.loads(output)
-                                    vm_ip = data.get('result', [])[0].get('ip-addresses', [])[0].get('ip-address')
-                                    break
-                                except (json.JSONDecodeError, IndexError, KeyError) as e:
-                                    print(f"Error parsing IP from output: {e}")
+
+
 
                 # Create and save the VM object in the database
                 vm = VM(
@@ -126,11 +123,11 @@ def create_vm(request):
                 )
                 vm.save()
 
-                return JsonResponse({'status': 'success', 'vm_ip': vm_ip})
+                return JsonResponse({'status': 'success', 'rc': result.rc,'output': stdout_output})
             except (KeyError, IndexError):
-                return JsonResponse({'status': 'failed', 'msg': 'Error parsing VM IP address'})
+                return JsonResponse({'status': 'failed', 'msg': 'Error parsing VM IP address','rc': result.rc,'output': stdout_output})
         else:
-            return JsonResponse({'status': 'failed', 'msg': 'Ansible playbook failed', 'rc': result.rc})
+            return JsonResponse({'status': 'failed', 'msg': 'Ansible playbook failed', 'rc': result.rc,'output': stdout_output})
 
     return JsonResponse({'status': 'failed', 'msg': 'Invalid request method'})
 
@@ -427,14 +424,13 @@ def snapshot_vm(request, vmid, name, description):
             return JsonResponse({'status': 'failed', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'failed', 'message': 'Invalid request'}, status=400)
 
-@csrf_exempt
-def take_snapshot(vmid, name, description):
-    try:
-        if not vmid:
-            return JsonResponse({'status': 'error', 'message': 'VM ID not provided'}, status=400)
 
-        if not name or not description:
-            return JsonResponse({'status': 'error', 'message': 'Name or description not provided'}, status=400)
+
+def take_snapshot(request):
+    if request.method == 'POST':
+        vmid = request.POST.get('vmid')
+        name = request.POST.get('name')
+        description = request.POST.get('description')
 
         # Path to your Ansible playbook
         playbook_path = '/home/hadil/workspace1/playbook_snapshot_vm.yml'
@@ -443,21 +439,24 @@ def take_snapshot(vmid, name, description):
         result = subprocess.run(
             [
                 'ansible-playbook', playbook_path,
-                '--extra-vars', f'vmid={vmid} snapshot_name={name} description="{description}"'            ],
+                '--extra-vars', f'vmid={vmid} snapshot_name={name} description="{description}"'
+            ],
             capture_output=True, text=True
         )
 
-        # Check if the playbook run was successful
         if result.returncode == 0:
-            return JsonResponse({'status': 'success', 'message': 'Snapshot taken successfully'})
+            # Render the HTML template with any context you need
+            html_content = render(request, "home/snapshot-list.html").content.decode('utf-8')
+            return JsonResponse({'status': 'success', 'html': html_content})
         else:
             return JsonResponse({'status': 'error', 'message': result.stderr}, status=500)
 
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+from django.shortcuts import redirect
 
 @csrf_exempt
-def remove_snapshot_service(vmid):
+def remove_snapshot_service(vmid,snapshotName):
     try:
         if not vmid:
             return JsonResponse({'status': 'error', 'message': 'VM ID not provided'}, status=400)
@@ -469,18 +468,29 @@ def remove_snapshot_service(vmid):
         result = subprocess.run(
             [
                 'ansible-playbook', playbook_path,
-                '--extra-vars', f'vmid={vmid} "'            ],
+                '--extra-vars', f'vmid={vmid} snapshot_name={snapshotName}'
+            ],
             capture_output=True, text=True
         )
 
+        # Log the command and result for debugging
+        print(f"Executed command: ansible-playbook {playbook_path} --extra-vars vmid={vmid}")
+        print(f"stdout: {result.stdout}")
+        print(f"stderr: {result.stderr}")
+
         # Check if the playbook run was successful
         if result.returncode == 0:
-            return JsonResponse({'status': 'success', 'message': 'Snapshot removed successfully'})
+            return  redirect('/vm/100/snapshots/')
         else:
             return JsonResponse({'status': 'error', 'message': result.stderr}, status=500)
 
     except Exception as e:
+        # Log the exception for debugging
+        print(f"Exception occurred: {str(e)}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+import subprocess
 
 import subprocess
 
@@ -489,39 +499,41 @@ def editVM(vmid, memory=None, processors=None, disk=None, isoimage=None):
         if not vmid:
             return {'status': 'error', 'message': 'VM ID not provided'}
 
-        # Prepare the Ansible command
-        playbook_path = '/home/hadil/workspace1/playbook_edit_vm.yml'
-        extra_vars = f"vmid={vmid}"
+        # Base extra_vars string
+        extra_vars_base = f"vmid={vmid}"
 
+        # Initialize result variables
+        result = None
+
+        # Prepare and run the Ansible playbooks
         if memory:
-            extra_vars += f" vm_memory={memory}"
-            print("memory",memory)
+            extra_vars = f"{extra_vars_base} vm_memory={memory}"
             result = subprocess.run(
                 ['ansible-playbook', '/home/hadil/workspace1/playbook_upload_memory.yml', '--extra-vars', extra_vars],
                 capture_output=True, text=True
             )
         if processors:
-            extra_vars += f" vm_cores={processors}"
+            extra_vars = f"{extra_vars_base} vm_cores={processors}"
             result = subprocess.run(
-
                 ['ansible-playbook', '/home/hadil/workspace1/playbook_upload_processors.yml', '--extra-vars', extra_vars],
                 capture_output=True, text=True
             )
         if disk:
-            extra_vars += f" new_disk_size={disk}"
+            extra_vars = f"{extra_vars_base} size={disk}G"
             result = subprocess.run(
-                ['ansible-playbook', '/home/hadil/workspace1/playbook_upload_disk.yml', '--extra-vars', extra_vars],
+                ['ansible-playbook', '/home/hadil/workspace1/playbook_upload_disk.yml','-i', '/home/hadil/workspace1/inventory.ini',  '--extra-vars', extra_vars],
                 capture_output=True, text=True
             )
         if isoimage:
-            extra_vars += f" iso_image={isoimage}"
+            extra_vars = f"{extra_vars_base} iso_image={isoimage}"
             result = subprocess.run(
-                ['ansible-playbook', '/home/hadil/workspace1/playbook_upload_iso.yml','--extra-vars', extra_vars],
+                ['ansible-playbook', '/home/hadil/workspace1/playbook_upload_iso.yml', '--extra-vars', extra_vars],
                 capture_output=True, text=True
             )
 
-        # Run the Ansible playbook with the provided variables
-
+        # Check if any playbook was executed
+        if not result:
+            return {'status': 'error', 'message': 'No changes were made', 'output': '', 'errors': ''}
 
         # Capture and return the playbook output and errors
         output = result.stdout
@@ -531,10 +543,11 @@ def editVM(vmid, memory=None, processors=None, disk=None, isoimage=None):
         if result.returncode == 0:
             return {'status': 'success', 'message': 'VM edited successfully', 'output': output, 'errors': errors}
         else:
-            return {'status': 'error', 'message': result.stderr, 'output': output, 'errors': errors}
+            return {'status': 'error', 'message': errors, 'output': output, 'errors': errors}
 
     except Exception as e:
         return {'status': 'error', 'message': str(e), 'output': '', 'errors': ''}
+
 
 
 
@@ -617,25 +630,52 @@ def snapshot_list(request, vmid):
 def backupvm(request):
     if request.method == 'POST':
         vmid = request.POST.get('vmid')
-        backup_mode = request.POST.get('backup_mode')
-        compress = request.POST.get('compress')
+        backup_mode = request.POST.get('mode')
+        compress = request.POST.get('compression')
         storage = request.POST.get('storage')
+        protect = request.POST.get('protect')
+        note = request.POST.get('note')
+
+        print(f"VM ID: {vmid}")
+        print(f"Backup Mode: {backup_mode}")
+        print(f"Compression: {compress}")
+        print(f"Storage: {storage}")
+        print(f"Protect: {protect}")
+        print(f"Note: {note}")
+
+        # Validate input
         if not vmid:
             return JsonResponse({'error': 'VM ID is required'}, status=400)
 
-            # Path to your Ansible playbook
+        # Path to your Ansible playbook
         playbook_path = '/home/hadil/workspace1/playbook_backup_create.yml'
 
         # Run the Ansible playbook
         result = subprocess.run(
-  ['ansible-playbook', playbook_path, '--extra-vars', f'vmid={vmid}  backup_mode={backup_mode}   compress={ compress} storage={storage}'],
-                capture_output=True, text=True
-            )
+            ['ansible-playbook',playbook_path,'-i', '/home/hadil/workspace1/inventory.ini', '--extra-vars', f'vmid={vmid} backup_mode={backup_mode} compress={compress} storage={storage} protect={protect} note={note}'],
+            capture_output=True, text=True
+        )
+        print("me herererere")
+        # Get the full output
+        print("Playbook Output (stdout):")
+        print(result.stdout)
 
+        # To print the standard error
+        print("Playbook Errors (stderr):")
+        print(result.stderr)
+        full_output = result.stdout + result.stderr
         if result.returncode == 0:
-            return JsonResponse({'status': 'success', 'output': result.stdout})
+             JsonResponse({'status': 'success', 'output': full_output})
+             return  redirect("/showvmbackup/")
         else:
-              return JsonResponse({'status': 'error', 'output': result.stderr}, status=500)
+            return JsonResponse({'status': 'error', 'output': full_output}, status=500)
+
+
+
+
+
+
+
 
 
 

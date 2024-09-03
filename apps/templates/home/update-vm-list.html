@@ -236,7 +236,7 @@
         statusCell.innerHTML = `<div>${vm.status} </div>` || 'N/A';
         row.insertCell(3).textContent = vm.maxmem || 'N/A';
         row.insertCell(4).textContent = vm.cpunumb || 'N/A';
-                row.insertCell(5).innerHTML = vm.maxdisk || 'N/A';
+        row.insertCell(5).innerHTML = vm.maxdisk || 'N/A';
 
       {% comment %} let diskInfo = '';
         if (vm['disk-item'] && Array.isArray(vm['disk-item'])) {
@@ -250,6 +250,7 @@
 
         row.insertCell(5).innerHTML = diskInfo || 'N/A';
 {% endcomment %}
+        
         const actionCell = row.insertCell(6);
         actionCell.innerHTML = `
       <div class="dropdown me-1">
@@ -262,10 +263,8 @@
 
                             
 
-                                  <li><a class="dropdown-item" id="id-bios">bios</a></li>
-                                  <li data-bs-toggle="modal" data-bs-target="#modal-form-iso"><a class="dropdown-item rounded-bottom" id="cd-id">cd/dvd drive (id2)</a></li>
+                                
                                   <li data-bs-toggle="modal" data-bs-target="#modal-form-disk"><a class="dropdown-item rounded-bottom" id="od-disk">hard disk</a></li>
-                                  <li><a class="dropdown-item rounded-bottom" id="id-network">Network device</a></li>
                               </ul>
                           </div>
 

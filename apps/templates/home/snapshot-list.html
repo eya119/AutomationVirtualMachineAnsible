@@ -118,7 +118,7 @@
                     <div class="text-center text-md-center mb-4 mt-md-0">
                         <h1 class="mb-0 h4">Create Virtual Machine</h1>
                     </div>
-                    <form action="#" class="mt-4">
+                  
                         <!-- Name Input -->
                         <div class="form-group mb-4">
                             <label for="vm-name">Virtual Machine Name</label>
@@ -149,9 +149,9 @@
 
                         <!-- Submit Button -->
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-gray-800" id="button-save"><a id="link-create">Create</a> </button>
+                            <button class="btn btn-gray-800" id="button-save">Create </button>
                         </div>
-                    </form>
+                
                 </div>
             </div>
         </div>
@@ -167,29 +167,27 @@
 <script>
        const ws = new WebSocket('ws://' + window.location.host + '/ws/vm-list/');
     ws.onmessage = function(event) {
-    const vmList = JSON.parse(event.data);
-    const tbody = document.getElementById('vm-list').querySelector('tbody');
-    tbody.innerHTML = '';  // Clear existing rows
+        const vmList = JSON.parse(event.data);
+        const tbody = document.getElementById('vm-list').querySelector('tbody');
+        tbody.innerHTML = '';  // Clear existing rows
 
-    vmList.forEach(vm => {
-        const row = tbody.insertRow();
+        vmList.forEach(vm => {
+            const row = tbody.insertRow();
 
-        row.insertCell(0).textContent = vm.vmid || 'N/A';
-        row.insertCell(1).textContent = vm.name || 'N/A';
-        const statusCell = row.insertCell(2);
-        statusCell.innerHTML = `<div>${vm.status} </div>` || 'N/A';
+            row.insertCell(0).textContent = vm.vmid || 'N/A';
+            row.insertCell(1).textContent = vm.name || 'N/A';
+            const statusCell = row.insertCell(2);
+            statusCell.innerHTML = `<div>${vm.status} </div>` || 'N/A';
 
-        const actionCell = row.insertCell(3);
-    const name = document.getElementById('vm-name').value;
-    const description = document.getElementById('vm-description').value;
-                const snapshotUrl = `/snapshot/${vm.vmid}/${name}/${description}/`;
-                actionCell.innerHTML = `
+            const actionCell = row.insertCell(3);
+
+            actionCell.innerHTML = `
 
 
 
 
 <div class="button-group">
-        <button  class="btn btn-primary btn-sm me-2"   type="button" class="btn btn-block btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modal-form" >
+        <button  class="btn btn-primary btn-sm me-2"  id="snapbutt"  type="button" class="btn btn-block btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modal-form" >
 
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play-fill me-1" viewBox="0 0 16 16">
                     <path d="M11.596 8.697l-6.363 3.692A.75.75 0 0 1 4 11.75v-7.5a.75.75 0 0 1 1.233-.639l6.363 3.692a.75.75 0 0 1 0 1.294z"/>
@@ -205,30 +203,47 @@
               view snapshots
             </a>
         </button>
-
-
-
-
-
-
-
-
-
-
-
         `;
-    document.getElementById("button-save").addEventListener('click', function (event) {
+            
+document.getElementById("button-save").addEventListener('click', function (event) {
+    var vmidCell = row.cells[0];
+    var vmidValue = vmidCell.textContent;
 
-        window.location.href =snapshotUrl
+    const name = document.getElementById('vm-name').value;
+    const description = document.getElementById('vm-description').value;
+
+    fetch('/snapshot/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: 'vmid=' + encodeURIComponent(vmidValue) +
+              '&name=' + encodeURIComponent(name) +
+              '&description=' + encodeURIComponent(description)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Assuming you want to replace the content of the snapshot-list element
+           // document.getElementById('snapshot-list').innerHTML = data.html;
+            window.location.href=`/vm/${vmidValue}/snapshots/` 
+        } else {
+            console.error('Error:', data.message);
+        }
+    })
+    .catch(error => console.error('Request failed:', error));
+});
+
+
+        });
+
+
     }
-    )
+    
+    
+   
 
-
-    }
-
-
-    );
-};
     ws.onopen = function() {
         console.log('WebSocket connection established');
     };

@@ -9,7 +9,7 @@ from apps.home.services.proxmox_service import editVM
 from apps.home.views import get_proxmox_nodes_view, create_proxmox_vm, vm_names, base_view, edit_proxmox_vm, list_vms, \
     removeVm, removeVmlist, start_proxmox_vm, stop_proxmox_vm, removeVm_in_info_vm, snapshot_vm, snapshotlist, \
     snapshot_list_of_one_vm, editVM_listview, editVM_view, editVMprocessors_view, editVMdisk_view, get_vm_snapshots, \
-    remove_snapshot_vm, showvmbackup, backupvmView
+    remove_snapshot_vm, showvmbackup, backupvmView, backups_list
 
 #from apps.home.views import get_proxmox_nodes_view, create_proxmox_vm
 urlpatterns = [
@@ -22,20 +22,22 @@ urlpatterns = [
     path('editVMlist/', editVM_listview, name='editVMlist'),
     path('vm/<int:vmid>/snapshots/', get_vm_snapshots, name='get_vm_snapshots'),
     path('start-vm/<int:vmid>/', start_proxmox_vm, name='start_proxmox_vm'),
-    path('remove-vm-snapshot/<int:vmid>/', remove_snapshot_vm, name='remove-vm-snapshot'),
+    path('remove-vm-snapshot/<int:vmid>/<str:snapshotName>/', remove_snapshot_vm, name='remove-vm-snapshot'),
     path('stop-vm/<int:vmid>/', stop_proxmox_vm, name='stop_proxmox_vm'),
     path('snapshot-list/', snapshotlist, name='snapshot-list'),
     path('showvmbackup/', showvmbackup, name='showvmbackup'),
     path('createbackup/', backupvmView, name='createbackup'),
+    path('list-backups/<int:vmid>/', backups_list, name='list_backups'),
 
 
 
 
-    path('snapshot/<int:vmid>/<str:name>/<str:description>/', snapshot_vm, name='snapshot_vm'),
-    path('snapshotvmlist/<int:vmid>/', snapshot_list_of_one_vm, name='ssnapshot_list_of_one_vm'),
+
+    path('snapshot/', snapshot_vm, name='snapshot_vm'),
+    path('snapshotvmlist/<int:vmid>/', snapshot_list_of_one_vm, name='snapshot_list_of_one_vm'),
     path('delete-vm-machine/<int:vmid>/', removeVm_in_info_vm, name='removeVm_in_info_vm'),
     path('delete-vm/<int:vmid>/', removeVm, name='remove_vm'),
-    path('delete-list/', removeVmlist, name='remove-vm-list'),
+    path('backup-list/', removeVmlist, name='remove-vm-list'),
     path('edit-vm/', edit_proxmox_vm, name='edit_vm'),
     path('list-vms/', list_vms, name='list_vms'),
     path('stream-logs/', views.stream_ansible_logs, name='stream_ansible_logs'),

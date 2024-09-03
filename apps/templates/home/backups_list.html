@@ -1,0 +1,177 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Backups List{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+    table {
+        width: 100%;
+        margin: auto;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        text-align: left;
+    }
+    th {
+        background-color: #f4f4f4;
+    }
+    
+    .loader {
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #3498db;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite; /* Safari */
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% { -webkit-transform: rotate(0deg); }
+        100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="py-4">
+    <nav aria-label="breadcrumb" class="d-none d-md-inline-block">
+        <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
+            <li class="breadcrumb-item">
+                <a href="#">
+                    <svg class="icon icon-xxs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                </a>
+            </li>
+            <li class="breadcrumb-item"><a href="#">Datacenter</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Backups</li>
+        </ol>
+    </nav>
+    <div class="d-flex justify-content-between w-100 flex-wrap">
+        <div class="mb-3 mb-lg-0">
+            <h1>Backups List</h1>
+        </div>
+    </div>
+</div>
+
+<div class="col-12 px-0">
+    <div class="card border-0 shadow">
+        <div class="card-body">
+            <table id="backup-list">
+                <thead>
+                    <tr>
+                        <th style="color: gray">VM ID</th>
+                        <th style="color: gray">Volume ID</th>
+                        <th style="color: gray">Size</th>
+                        <th style="color: gray">Notes</th>
+{% comment %}
+                        <th style="color: gray">Created Time</th>
+{% endcomment %}
+                        <th style="color: gray">Protected</th>
+                        <th style="color: gray">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for backup in backups %}
+                    <tr>
+                        <td>{{ backup.vmid }}</td>
+                        <td>{{ backup.volid }}</td>
+                        <td>{{ backup.size }}</td>
+                        <td>{{ backup.notes }}</td>
+  <td>{{ backup.protected }}</td>
+  {% comment %}            <td>{ backup.ctime|date:"H:i:s" }  ....</td> <!-- Ensures proper date formatting -->                    
+{% endcomment %}
+                    <td><button> Restore vm </button></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">No backups found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Modal Content -->
+            <div class="modal fade" id="modal-form" tabindex="-1" role="dialog" aria-labelledby="modal-form" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create Backup</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="#" class="mt-4">
+                                <div class="mb-3">
+                                    <label for="vm-storage" class="form-label">Storage</label>
+                                    <select class="form-select" id="vm-storage" required>
+                                        <option value="" disabled selected>Select Storage</option>
+                                        <option value="local">Local LVM</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="vm-compression" class="form-label">Compression</label>
+                                    <select class="form-select" id="vm-compression" required>
+                                        <option value="" disabled selected>Select Compression Type</option>
+                                        <option value="lzo">lzo</option>
+                                        <option value="gzip">gzip</option>
+                                        <option value="zstd">zstd</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="vm-mode" class="form-label">Mode</label>
+                                    <select class="form-select" id="vm-mode" required>
+                                        <option value="" disabled selected>Select a Mode</option>
+                                        <option value="snapshot">Snapshot</option>
+                                        <option value="suspend">Suspended</option>
+                                        <option value="stop">Stopped</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="backup-protect">Protect Backup</label>
+                                    <input class="form-check-input" type="radio" name="backup-protect" id="protect-yes" value="yes" checked>
+                                    <label class="form-check-label" for="protect-yes">Yes</label>
+                                    <input class="form-check-input" type="radio" name="backup-protect" id="protect-no" value="no">
+                                    <label class="form-check-label" for="protect-no">No</label>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="vm-note" class="form-label">Notes</label>
+                                    <input type="text" class="form-control" placeholder="Enter notes" id="vm-note" required>
+                                </div>
+
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary" id="button-save">Backup</button>
+                                </div>
+                            </form>
+
+                            <!-- Loader Content -->
+                            <div id="loader-container" style="display: none; text-align: center; margin-top: 20px;">
+                                <div class="loader"></div>
+                                <p>Please be patient, it's getting created...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End of Modal Content -->
+        </div>
+    </div>
+</div>
+{% endblock content %}

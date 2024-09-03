@@ -11,6 +11,7 @@
     document.getElementById('backupbutton').addEventListener('click', function(event) {
     event.preventDefault();
     var vmid = document.getElementById('vmid').value;
+    var message = document.getElementById('message').value;
 
     fetch('/createbackup/', {
         method: 'POST',
@@ -18,12 +19,13 @@
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-CSRFToken': '{{ csrf_token }}'
         },
-        body: 'vmid=' + encodeURIComponent(vmid)
+        body: 'vmid=' + encodeURIComponent(vmid) + '&message=' + encodeURIComponent(message)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             alert(data.message);
+                            window.location.href = '/home/update-vm-list.html'; // Redirect after success
         } else {
             console.error('Error:', data.error);
         }

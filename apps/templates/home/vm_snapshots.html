@@ -131,7 +131,8 @@
                 cancelButtonText: 'Cancel',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const removeUrl = `/remove-vm-snapshot/${vmid}/`;
+                    console.log(snapshotName)
+                    const removeUrl = `/remove-vm-snapshot/${vmid}/${snapshotName}/`;
                     window.location.href = removeUrl;
 
                 }
