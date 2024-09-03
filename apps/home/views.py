@@ -2,6 +2,8 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
+import subprocess
+
 import requests
 from django import template
 from django.contrib.auth.decorators import login_required
@@ -308,8 +310,11 @@ def backups_list(request, vmid):
 
 @csrf_exempt
 def restore(request):
+    print("i ammmmm heerrerrere")
     if request.method == 'POST':
         vmid = request.POST.get('vmid')
+        backup_file = request.POST.get('backup_file')
+        backup_file =  backup_file.replace("local:backup/", "")
 
         print(f"VM ID: {vmid}")
 
@@ -318,11 +323,11 @@ def restore(request):
             return JsonResponse({'error': 'VM ID is required'}, status=400)
 
         # Path to your Ansible playbook
-        playbook_path = '/home/hadil/workspace1/playbook_backup_create.yml'
+        playbook_path = '/home/hadil/workspace1/playbook_backup_restore.yml'
 
         # Run the Ansible playbook
         result = subprocess.run(
-            ['ansible-playbook',playbook_path,'-i', '/home/hadil/workspace1/inventory.ini', '--extra-vars', f'vmid={vmid} backup_mode={backup_mode} compress={compress} storage={storage} protect={protect} note={note}'],
+            ['ansible-playbook',playbook_path,'-i', '/home/hadil/workspace1/inventory.ini', '--extra-vars', f'vmid={vmid} backup_file={backup_file} '],
             capture_output=True, text=True
         )
         print("me herererere")

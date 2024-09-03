@@ -22,7 +22,7 @@
     th {
         background-color: #f4f4f4;
     }
-    
+
     .loader {
         border: 16px solid #f3f3f3;
         border-radius: 50%;
@@ -93,9 +93,17 @@
                         <td>{{ backup.size }}</td>
                         <td>{{ backup.notes }}</td>
   <td>{{ backup.protected }}</td>
-  {% comment %}            <td>{ backup.ctime|date:"H:i:s" }  ....</td> <!-- Ensures proper date formatting -->                    
+  {% comment %}            <td>{ backup.ctime|date:"H:i:s" }  ....</td> <!-- Ensures proper date formatting -->
 {% endcomment %}
-                    <td><button> Restore vm </button></td>
+                        <td>
+    <button 
+        class="btn btn-primary restore-btn" 
+        data-vmid="{{ backup.vmid }}" 
+        data-backup-file="{{ backup.volid }}">
+        Restore VM
+    </button>
+</td>
+
                     </tr>
                     {% empty %}
                     <tr>
@@ -106,72 +114,55 @@
             </table>
 
             <!-- Modal Content -->
-            <div class="modal fade" id="modal-form" tabindex="-1" role="dialog" aria-labelledby="modal-form" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Create Backup</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form action="#" class="mt-4">
-                                <div class="mb-3">
-                                    <label for="vm-storage" class="form-label">Storage</label>
-                                    <select class="form-select" id="vm-storage" required>
-                                        <option value="" disabled selected>Select Storage</option>
-                                        <option value="local">Local LVM</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="vm-compression" class="form-label">Compression</label>
-                                    <select class="form-select" id="vm-compression" required>
-                                        <option value="" disabled selected>Select Compression Type</option>
-                                        <option value="lzo">lzo</option>
-                                        <option value="gzip">gzip</option>
-                                        <option value="zstd">zstd</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="vm-mode" class="form-label">Mode</label>
-                                    <select class="form-select" id="vm-mode" required>
-                                        <option value="" disabled selected>Select a Mode</option>
-                                        <option value="snapshot">Snapshot</option>
-                                        <option value="suspend">Suspended</option>
-                                        <option value="stop">Stopped</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="backup-protect">Protect Backup</label>
-                                    <input class="form-check-input" type="radio" name="backup-protect" id="protect-yes" value="yes" checked>
-                                    <label class="form-check-label" for="protect-yes">Yes</label>
-                                    <input class="form-check-input" type="radio" name="backup-protect" id="protect-no" value="no">
-                                    <label class="form-check-label" for="protect-no">No</label>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="vm-note" class="form-label">Notes</label>
-                                    <input type="text" class="form-control" placeholder="Enter notes" id="vm-note" required>
-                                </div>
-
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary" id="button-save">Backup</button>
-                                </div>
-                            </form>
-
-                            <!-- Loader Content -->
-                            <div id="loader-container" style="display: none; text-align: center; margin-top: 20px;">
-                                <div class="loader"></div>
-                                <p>Please be patient, it's getting created...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
             <!-- End of Modal Content -->
         </div>
     </div>
 </div>
 {% endblock content %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.restore-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const vmid = this.getAttribute('data-vmid');
+                const backupFile = this.getAttribute('data-backup-file');
+                
+                // Show loader and message
+                document.getElementById('loader-container').style.display = 'block';
+                
+                // Send AJAX request
+                fetch('{% url "restore" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        vmid: vmid,
+                        backup_file: backupFile
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loader and message
+                    document.getElementById('loader-container').style.display = 'none';
+
+                    if (data.status === 'success') {
+                        // Optionally redirect or update the page
+                        window.location.href = "/showvmbackup/";
+                    } else {
+                        // Handle error
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Hide loader and message
+                    document.getElementById('loader-container').style.display = 'none';
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}
