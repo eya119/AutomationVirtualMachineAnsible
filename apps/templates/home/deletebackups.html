@@ -1,0 +1,176 @@
+<{% extends "layouts/base.html" %}
+
+{% block title %}VM List{% endblock %}
+
+{% block stylesheets %}
+    <meta name="csrf-token" content="{{ csrf_token }}"> <!-- CSRF Token Meta Tag -->
+    <style>
+        /* Basic styling for the table and button */
+        table {
+            width: 100%;
+            margin: auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .loader {
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            -webkit-animation: spin 2s linear infinite;
+            animation: spin 2s linear infinite;
+            display: none; /* Hidden by default */
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000; /* Ensure it is on top */
+        }
+
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+{% endblock stylesheets %}
+
+{% block content %}
+<body>
+    <h1>VMs with Backups</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>VM ID</th>
+                <th>volid</th>
+                <th>size</th>
+                <th>format</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if backups %}
+                
+                {% for backup in backups.data %}
+                    {% if backup.volid != 'local:iso/ubuntu-22.04.3-desktop-amd64.iso' %}
+                <tr>
+                    <td>{{ backup.vmid }}</td>
+                    <td>{{ backup.volid }}</td>
+                    <td>{{ backup.size }}</td>
+                    <td>{{ backup.format }}</td>
+                    
+                    <td>
+                                                        <button class="btn btn-primary" onclick="removevmbackup('{{ backup.volid|urlencode }}')">Remove VM</button>
+                    </td>
+                        
+                        
+                        
+                </tr>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td>No VMs with backups found.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+                <div id="loading" class="loader"></div>
+
+</body>
+{% endblock %}
+
+
+{% block javascripts %}
+
+    <script>
+     const swalWithBootstrapButtons = Swal.mixin({
+            customClass: {
+                confirmButton: 'btn btn-primary',
+                cancelButton: 'btn btn-gray'
+            },
+            buttonsStyling: false
+        });
+        function removevmbackup(volid) {
+            console.log("bonjorno")
+            
+                swalWithBootstrapButtons.fire({
+                icon: 'warning',
+                title: 'success alert',
+                text: `Are you sure you want to remove entry 'local:backup/${volid}'`,
+                showCancelButton: true,
+                confirmButtonText: 'ok',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                     const loader = document.getElementById('loading');
+            loader.style.display = 'block'; // Show loading animation
+
+            // Get CSRF token from meta tag
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (!csrfMeta) {
+                console.error('CSRF token meta tag not found');
+                loader.style.display = 'none'; // Hide loading animation
+                return;
+            }
+            const csrfToken = csrfMeta.getAttribute('content');
+
+            fetch(`/removebackup/${encodeURIComponent(volid)}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    'volid': volid
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                       swalWithBootstrapButtons.fire({
+                icon: 'success',
+                title: 'success alert',
+                text: `backup has been restored successfully`,
+                showCancelButton: true,
+                confirmButtonText: 'ok',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                     window.location.reload();
+                   // window.location.href=`/vm-info/${vmid}/`
+
+                }
+            });
+        
+        
+                   // Reload the page after successful restore
+                } 
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to restore VM');
+            })
+            .finally(() => {
+                loader.style.display = 'none'; // Hide loading animation
+            });
+
+                }
+            });
+        
+           
+        }
+    </script>
+
+{% endblock javascripts %}

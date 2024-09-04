@@ -9,7 +9,8 @@ from apps.home.services.proxmox_service import editVM
 from apps.home.views import get_proxmox_nodes_view, create_proxmox_vm, vm_names, base_view, edit_proxmox_vm, list_vms, \
     removeVm, removeVmlist, start_proxmox_vm, stop_proxmox_vm, removeVm_in_info_vm, snapshot_vm, snapshotlist, \
     snapshot_list_of_one_vm, editVM_listview, editVM_view, editVMprocessors_view, editVMdisk_view, get_vm_snapshots, \
-    remove_snapshot_vm, showvmbackup, backupvmView, backups_list, restore, restorelist, id_backups_list
+    remove_snapshot_vm, showvmbackup, backupvmView, backups_list, restore, restorelist, id_backups_list, \
+    allthe_backups_list, removebackup
 
 #from apps.home.views import get_proxmox_nodes_view, create_proxmox_vm
 urlpatterns = [
@@ -28,7 +29,9 @@ urlpatterns = [
     path('showvmbackup/', showvmbackup, name='showvmbackup'),
     path('createbackup/', backupvmView, name='createbackup'),
     path('list-backups/<int:vmid>/', backups_list, name='list_backups'),
+    path('allthe_backups_list/', allthe_backups_list, name='allthe_backups_list'),
     re_path(r'^restore/(?P<vmid>\d+)/(?P<backup_file>.+)/$', restore, name='restore'),
+    re_path(r'^removebackup/(?P<backup_file>.+)/$', removebackup, name='removebackup'),
 
 
 

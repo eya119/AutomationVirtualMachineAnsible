@@ -315,6 +315,48 @@ def backups_list(request, vmid):
         return HttpResponse(f'Error: {str(e)}', status=500)
 
 
+import requests
+import urllib.parse
+from django.shortcuts import render
+from django.http import HttpResponse
+
+
+def allthe_backups_list(request):
+    api_url = 'https://192.168.187.137:8006/api2/json'
+    login_url = f'{api_url}/access/ticket'
+    api_user = 'root@pam'
+    api_password = '00000'
+    node = 'proxmox'  # Replace with your Proxmox node name
+    storage = 'local'  # Replace with your storage name
+
+    # Login and get ticket and CSRF token
+    login_data = {
+        'username': api_user,
+        'password': api_password
+    }
+
+    login_response = requests.post(login_url, data=login_data, verify=False)
+    login_response.raise_for_status()
+    data = login_response.json()['data']
+    ticket = data['ticket']
+    csrf_token = data['CSRFPreventionToken']
+
+    # Setup headers for authenticated requests
+    headers = {
+        'Authorization': f'PVEAuthCookie={ticket}',
+        'CSRFPreventionToken': csrf_token
+    }
+
+    # Fetch backups from the storage
+    backups_url = f'{api_url}/nodes/{node}/storage/{storage}/content'
+    backups_response = requests.get(backups_url, headers=headers, verify=False)
+    backups_response.raise_for_status()
+    backups_data = backups_response.json()
+
+    # Ensure `data` key exists and is a list
+
+    # Render HTML template with backups data
+    return render(request, 'home/deletebackups.html', {'backups': backups_data})
 
 
 
@@ -386,6 +428,45 @@ def restore(request, vmid, backup_file):
         result = subprocess.run(
             ['ansible-playbook', playbook_path, '-i', '/home/hadil/workspace1/inventory.ini', '--extra-vars',
              f'vmid={vmid} backup_file={backup_file}'],
+            capture_output=True, text=True
+        )
+
+        # Print the output for debugging
+        print("Playbook Output (stdout):")
+        print(result.stdout)
+        print("Playbook Errors (stderr):")
+        print(result.stderr)
+
+        full_output = result.stdout + result.stderr
+        if result.returncode == 0:
+            return JsonResponse({'status': 'success', 'output': full_output})
+        else:
+            return JsonResponse({'status': 'error', 'output': full_output}, status=500)
+
+    else:
+        return JsonResponse({'error': 'Invalid HTTP method'}, status=405)
+
+
+
+@csrf_exempt
+def removebackup(request, backup_file):
+    if request.method == 'POST':
+        backup_file = unquote(backup_file)
+        backup_file = backup_file.replace("local:backup/", "")
+
+        print(f"VM ID: {backup_file}")
+
+        # Validate input
+        if not backup_file:
+            return JsonResponse({'error': 'VM backup_file is required'}, status=400)
+
+        # Path to your Ansible playbook
+        playbook_path = '/home/hadil/workspace1/playbook_backup_remove.yml'
+
+        # Run the Ansible playbook
+        result = subprocess.run(
+            ['ansible-playbook', playbook_path, '-i', '/home/hadil/workspace1/inventory.ini', '--extra-vars',
+             f'backup_file={backup_file}'],
             capture_output=True, text=True
         )
 
