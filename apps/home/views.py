@@ -3,6 +3,7 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 import subprocess
+import urllib
 
 import requests
 from django import template
@@ -29,6 +30,8 @@ def index(request):
 def index_home1(request):
     return render(request, 'home/index.html')
 
+def restorelist(request):
+    return render(request, 'home/restoreVms.html')
 
 @login_required(login_url="/login/")
 def pages(request):
@@ -298,8 +301,12 @@ def backups_list(request, vmid):
         # Filter backups by VM ID
         if 'data' in backups_data:
             backups = [backup for backup in backups_data['data'] if backup.get('vmid') == int(vmid)]
+
+
         else:
             backups = []
+        for backup in backups:
+            backup['encoded_volid'] = urllib.parse.quote(backup['volid'])
 
         # Render HTML template with filtered backups data
         return render(request, 'home/backups_list.html', {'backups': backups, 'vmid': vmid})
@@ -308,13 +315,63 @@ def backups_list(request, vmid):
         return HttpResponse(f'Error: {str(e)}', status=500)
 
 
+
+
+
+
+import requests
+
+def id_backups_list(request):
+    api_url = 'https://192.168.187.137:8006/api2/json'
+    login_url = f'{api_url}/access/ticket'
+    api_user = 'root@pam'
+    api_password = '00000'
+    node = 'proxmox'
+    storage = 'local'
+
+    # Login and get ticket and CSRF token
+    login_data = {
+        'username': api_user,
+        'password': api_password
+    }
+
+    # Perform login request
+    login_response = requests.post(login_url, data=login_data, verify=False)
+    login_response.raise_for_status()
+    data = login_response.json()['data']
+    ticket = data['ticket']
+    csrf_token = data['CSRFPreventionToken']
+
+    # Setup headers for authenticated requests
+    headers = {
+        'Authorization': f'PVEAuthCookie={ticket}',
+        'CSRFPreventionToken': csrf_token
+    }
+
+    # Fetch backups from the storage
+    backups_url = f'{api_url}/nodes/{node}/storage/{storage}/content'
+    backups_response = requests.get(backups_url, headers=headers, verify=False)
+    backups_response.raise_for_status()
+
+    # Print response for debugging
+    backups_data = backups_response.json()
+    print("Backups response data:", backups_data)
+    vms_with_backups = {backup['vmid'] for backup in backups_data.get('data', []) if 'vmid' in backup}
+    return render(request, 'home/restoreVms.html', {'vms_with_backups': vms_with_backups})
+
+
+
+from urllib.parse import unquote
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from urllib.parse import unquote
+import subprocess
+
 @csrf_exempt
-def restore(request):
-    print("i ammmmm heerrerrere")
+def restore(request, vmid, backup_file):
     if request.method == 'POST':
-        vmid = request.POST.get('vmid')
-        backup_file = request.POST.get('backup_file')
-        backup_file =  backup_file.replace("local:backup/", "")
+        backup_file = unquote(backup_file)
+        backup_file = backup_file.replace("local:backup/", "")
 
         print(f"VM ID: {vmid}")
 
@@ -327,20 +384,22 @@ def restore(request):
 
         # Run the Ansible playbook
         result = subprocess.run(
-            ['ansible-playbook',playbook_path,'-i', '/home/hadil/workspace1/inventory.ini', '--extra-vars', f'vmid={vmid} backup_file={backup_file} '],
+            ['ansible-playbook', playbook_path, '-i', '/home/hadil/workspace1/inventory.ini', '--extra-vars',
+             f'vmid={vmid} backup_file={backup_file}'],
             capture_output=True, text=True
         )
-        print("me herererere")
-        # Get the full output
+
+        # Print the output for debugging
         print("Playbook Output (stdout):")
         print(result.stdout)
-
-        # To print the standard error
         print("Playbook Errors (stderr):")
         print(result.stderr)
+
         full_output = result.stdout + result.stderr
         if result.returncode == 0:
-             JsonResponse({'status': 'success', 'output': full_output})
-             return  redirect("/showvmbackup/")
+            return JsonResponse({'status': 'success', 'output': full_output})
         else:
             return JsonResponse({'status': 'error', 'output': full_output}, status=500)
+
+    else:
+        return JsonResponse({'error': 'Invalid HTTP method'}, status=405)

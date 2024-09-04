@@ -1,0 +1,78 @@
+<{% extends "layouts/base.html" %}
+
+{% block title %}VM List{% endblock %}
+
+{% block stylesheets %}
+    <meta name="csrf-token" content="{{ csrf_token }}"> <!-- CSRF Token Meta Tag -->
+    <style>
+        /* Basic styling for the table and button */
+        table {
+            width: 100%;
+            margin: auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .loader {
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            -webkit-animation: spin 2s linear infinite;
+            animation: spin 2s linear infinite;
+            display: none; /* Hidden by default */
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000; /* Ensure it is on top */
+        }
+
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+{% endblock stylesheets %}
+
+{% block content %}
+<body>
+    <h1>VMs with Backups</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>VM ID</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if vms_with_backups %}
+
+                {% for vmid in vms_with_backups %}
+                <tr>
+                    <td>{{ vmid }}</td>
+                    <td><a href="/list-backups/{{vmid}}/"><button class="btn btn-primary">view backups </button></a> </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td>No VMs with backups found.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</body>
+{% endblock %}
