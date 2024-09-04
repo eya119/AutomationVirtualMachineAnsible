@@ -83,16 +83,19 @@
                 spinner.style.visibility = 'hidden';
 
                 if (data.success) {
+                     window.location.href=`/vm-info/${vmid}/`
                     alert('Form submitted successfully!');
                     //window.redi
                     // Optionally redirect or handle success
                 } else {
                     alert('Form submitted successfully : ' );
+                     window.location.href=`/vm-info/${vmid}/`
                     // Optionally handle form submission errors
                 }
             })
             .catch(error => {
                 spinner.style.visibility = 'hidden';
+                 window.location.href='/list-vms/'
                // console.error('Form submission error:', error);
                 alert('Form submitted succesfully : ');
             });

@@ -29,6 +29,8 @@ def index(request):
 
 def index_home1(request):
     return render(request, 'home/index.html')
+def index_home2(request):
+    return render(request, 'home/dashboard.html')
 
 def restorelist(request):
     return render(request, 'home/restoreVms.html')

@@ -10,7 +10,7 @@ from apps.home.views import get_proxmox_nodes_view, create_proxmox_vm, vm_names,
     removeVm, removeVmlist, start_proxmox_vm, stop_proxmox_vm, removeVm_in_info_vm, snapshot_vm, snapshotlist, \
     snapshot_list_of_one_vm, editVM_listview, editVM_view, editVMprocessors_view, editVMdisk_view, get_vm_snapshots, \
     remove_snapshot_vm, showvmbackup, backupvmView, backups_list, restore, restorelist, id_backups_list, \
-    allthe_backups_list, removebackup
+    allthe_backups_list, removebackup, index_home2
 
 #from apps.home.views import get_proxmox_nodes_view, create_proxmox_vm
 urlpatterns = [
@@ -55,8 +55,10 @@ urlpatterns = [
   #  path('vms/delete/<int:vmid>/', views.delete_vm_view, name='delete_vm'),
     #path('delete-vm/<str:node>/<int:vmid>/', views.delete_vm_view, name='delete_vm'),
     # The home page
-    path('', base_view, name='base_view'),
-   #path('', views.index, name='home'),
+    #path('', base_view, name='base_view'),
+
+
+   path('', index_home2, name='home'),
 
     # Matches any html file
     re_path(r'^.*\.*', views.pages, name='pages'),
